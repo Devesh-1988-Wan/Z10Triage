@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { User as DashboardUser } from '@/types/dashboard';
 
 interface AuthContextType {
@@ -16,23 +16,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<DashboardUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This function will handle the initial state and any subsequent auth changes
-    const handleAuthStateChange = async (session: Session | null) => {
-      setSession(session);
-
+    const handleUserSession = async (session: Session | null) => {
       if (session?.user) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
 
-          if (profile) {
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            setUser(null);
+          } else {
             setUser({
               id: profile.id,
               email: profile.email,
@@ -40,30 +39,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile.name
             });
           }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
+        } catch (err) {
+          console.error('Error fetching user profile:', err);
           setUser(null);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         setUser(null);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Set loading to true on every auth change to prevent a brief blank screen
-        setIsLoading(true);
-        handleAuthStateChange(session);
-      }
-    );
-
-    // Perform initial check
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setIsLoading(true);
+      await handleUserSession(session);
+    });
+    
+    // Initial check on component mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthStateChange(session);
+      handleUserSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -71,51 +64,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setIsLoading(false);
-    
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
+    return { success: !error, error: error?.message };
   };
 
   const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    
     const redirectUrl = `${window.location.origin}/`;
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name
-        }
-      }
+      options: { emailRedirectTo: redirectUrl, data: { name } }
     });
-
     setIsLoading(false);
-    
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
+    return { success: !error, error: error?.message };
   };
 
   const logout = async (): Promise<void> => {
     setIsLoading(true);
     await supabase.auth.signOut();
     setUser(null);
-    setSession(null);
     setIsLoading(false);
   };
 
@@ -123,12 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth?mode=reset`,
     });
-    
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
+    return { success: !error, error: error?.message };
   };
 
   return (
