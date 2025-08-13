@@ -242,6 +242,34 @@ export type Database = {
         }
         Relationships: []
       }
+      // NEW: Add dashboard_layout table
+      dashboard_layout: {
+        Row: {
+          id: string
+          user_id: string | null
+          layout: Json
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          layout: Json
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          layout?: Json
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
