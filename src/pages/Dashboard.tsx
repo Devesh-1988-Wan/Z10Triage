@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminForms } from '@/components/AdminForms';
 import { cn } from '@/lib/utils';
 
@@ -26,9 +26,17 @@ export const Dashboard: React.FC = () => {
     refetch,
   } = useDashboardData();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
+
+  useEffect(() => {
+    // Redirect to editor if admin dashboard is blank and data has loaded
+    if (!isDataLoading && isAdmin && !hasWidgets) {
+      navigate('/dashboard/editor');
+    }
+  }, [isDataLoading, isAdmin, hasWidgets, navigate]);
 
   const handleExportPdf = async () => {
     try {
