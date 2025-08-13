@@ -163,38 +163,45 @@ export const useDashboardData = () => {
     setError(null);
 
     try {
+      // Fetch dynamic layout first
       let currentLayout: DashboardLayout | null = null;
       if (user?.id) {
-        // Try to fetch user-specific layout first
+        // Try to fetch user-specific layout
         const { data: userLayout, error: userLayoutError } = await supabase
           .from('dashboard_layout')
           .select('layout')
           .eq('user_id', user.id)
           .single();
 
-        if (userLayout) {
+        if (userLayoutError && userLayoutError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error('Error fetching user layout:', userLayoutError);
+          // Don't throw, just fall back to default
+        } else if (userLayout) {
           currentLayout = userLayout.layout as unknown as DashboardLayout;
-        } else {
-          // If no user-specific layout, try to fetch the default layout from the DB
-          const { data: defaultLayout, error: defaultLayoutError } = await supabase
-            .from('dashboard_layout')
-            .select('layout')
-            .eq('is_default', true)
-            .single();
-
-          if (defaultLayout) {
-            currentLayout = defaultLayout.layout as unknown as DashboardLayout;
-          } else {
-            // As a final fallback, use the hardcoded default layout
-            currentLayout = DEFAULT_DASHBOARD_LAYOUT;
-          }
         }
-      } else {
-        // If no user is logged in, use the hardcoded default layout
-        currentLayout = DEFAULT_DASHBOARD_LAYOUT;
       }
 
+      // If no user-specific layout or user is not logged in, fetch default layout
+      if (!currentLayout) {
+        const { data: defaultLayout, error: defaultLayoutError } = await supabase
+          .from('dashboard_layout')
+          .select('layout')
+          .eq('is_default', true)
+          .single();
+
+        if (defaultLayoutError && defaultLayoutError.code !== 'PGRST116') {
+          console.error('Error fetching default layout:', defaultLayoutError);
+          // Fallback to hardcoded default if DB default fails
+          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+        } else if (defaultLayout) {
+          currentLayout = defaultLayout.layout as unknown as DashboardLayout;
+        } else {
+          // If no default layout in DB, use hardcoded default
+          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+        }
+      }
       setDashboardLayout(currentLayout);
+
 
       // Fetch all other dashboard data concurrently
       const [
