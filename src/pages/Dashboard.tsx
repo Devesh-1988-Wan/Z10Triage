@@ -1,41 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-// Remove direct imports of widgets, they will be rendered dynamically
-// import { MetricCard } from '@/components/MetricCard';
-// import { BugChart } from '@/components/BugChart';
-// import { CustomerSupportTable } from '@/components/CustomerSupportTable';
-// import { DevelopmentPipeline } from '@/components/DevelopmentPipeline';
-
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, Settings } from 'lucide-react'; // Added Settings icon
+import { Loader2, AlertCircle, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Added Card components for consistent styling
-import { Button } from '@/components/ui/button'; // Import Button
-import { WidgetRenderer } from '@/components/WidgetRenderer'; // NEW: Import WidgetRenderer
-import { WidgetEditor } from '@/components/Admin/WidgetEditor'; // NEW: Import WidgetEditor
-import { AdminForms } from '@/components/AdminForms'; // Import AdminForms
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { WidgetRenderer } from '@/components/WidgetRenderer';
+import { Link } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
   const {
-    dashboardLayout, // Now fetching dynamic layout
+    dashboardLayout,
     bugReports,
     customerTickets,
     developmentTickets,
     dashboardMetrics,
     isLoading: isDataLoading,
     error,
-    refetch
   } = useDashboardData();
   const { toast } = useToast();
-
-  // State to toggle widget editor visibility, initially shown for admins with empty layouts
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
-  const [showEditor, setShowEditor] = useState(isAdmin && !hasWidgets);
 
   const handleExportPdf = async () => {
     try {
@@ -52,6 +39,8 @@ export const Dashboard: React.FC = () => {
       });
     }
   };
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   if (isAuthLoading || isDataLoading) {
     return (
@@ -81,6 +70,8 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
+
   return (
     <DashboardLayout onExportPdf={handleExportPdf}>
       <div id="dashboard-content" className="space-y-6">
@@ -95,9 +86,11 @@ export const Dashboard: React.FC = () => {
             </p>
           </div>
           {isAdmin && (
-            <Button variant="outline" onClick={() => setShowEditor(!showEditor)}>
-              <Settings className="w-4 h-4 mr-2" />
-              {showEditor ? 'Hide Editor' : 'Customize Dashboard'}
+            <Button asChild variant="outline">
+              <Link to="/dashboard/editor">
+                <Settings className="w-4 h-4 mr-2" />
+                Customize Dashboard
+              </Link>
             </Button>
           )}
         </div>
@@ -119,46 +112,20 @@ export const Dashboard: React.FC = () => {
             ))}
           </div>
         ) : (
-          !showEditor && (
-            <Card className="shadow-card">
-              <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground">No widgets configured for this dashboard. {isAdmin && "Use 'Customize Dashboard' to add some!"}</p>
-              </CardContent>
-            </Card>
-          )
-        )}
-
-
-        {/* Admin Forms - Only show for admins */}
-        {isAdmin && (
-          <>
-            {showEditor && (
-              <WidgetEditor
-                currentLayout={dashboardLayout}
-                onLayoutSave={refetch} // Pass refetch to update dashboard after saving changes
-              />
-            )}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {/* <Plus className="w-5 h-5" /> */}
-                  Data Management
-                </CardTitle>
-                <CardDescription>
-                  Create and manage bug reports, customer support tickets, and development tasks
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* AdminForms component remains for creating new data entries */}
-                <AdminForms
-                  onDataUpdate={refetch}
-                  bugReports={bugReports}
-                  customerTickets={customerTickets}
-                  developmentTickets={developmentTickets}
-                />
-              </CardContent>
-            </Card>
-          </>
+          <Card className="shadow-card">
+            <CardContent className="pt-6 text-center">
+              <p className="text-muted-foreground">
+                No widgets configured for this dashboard.
+                {isAdmin && (
+                  <span className="ml-1">
+                    <Link to="/dashboard/editor" className="text-blue-500 hover:underline">
+                      Go to the editor to add some!
+                    </Link>
+                  </span>
+                )}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Footer Information */}
