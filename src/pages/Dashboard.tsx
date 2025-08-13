@@ -6,7 +6,11 @@ import { CustomerSupportTable } from '@/components/CustomerSupportTable';
 import { DevelopmentPipeline } from '@/components/DevelopmentPipeline';
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Bug, TrendingUp, Users, Clock, Shield, Zap } from 'lucide-react';
+import { Bug, TrendingUp, Users, Clock, Shield, Zap, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -49,6 +53,24 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <DashboardLayout onExportPdf={handleExportPdf}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Alert variant="destructive" className="w-full max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load dashboard data. Please try again later.
+              <br />
+              {error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout onExportPdf={handleExportPdf}>
       <div id="dashboard-content" className="space-y-6">
@@ -66,49 +88,49 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <MetricCard
             title="Bugs Fixed This Week"
-            value={286}
+            value={dashboardMetrics?.totalBugsFixed ?? 0}
             change={{ value: "+18%", trend: "up" }}
             icon={Bug}
             description="Marked as Dev Done"
           />
           <MetricCard
             title="Total Tickets Resolved"
-            value={328}
+            value={dashboardMetrics?.totalTicketsResolved ?? 0}
             change={{ value: "+12%", trend: "up" }}
             icon={TrendingUp}
             description="Including Tasks/Stories/Bugs"
           />
           <MetricCard
             title="Blocker Bugs"
-            value={28}
+            value={dashboardMetrics?.blockerBugs ?? 0}
             priority="blocker"
             icon={Shield}
             description="Highest priority issues"
           />
           <MetricCard
             title="Critical Bugs"
-            value={157}
+            value={dashboardMetrics?.criticalBugs ?? 0}
             priority="critical"
             icon={Bug}
             description="Requires immediate attention"
           />
           <MetricCard
             title="High Priority Bugs"
-            value={466}
+            value={dashboardMetrics?.highPriorityBugs ?? 0}
             priority="high"
             icon={Clock}
             description="Important but not critical"
           />
           <MetricCard
             title="Active Customer Support"
-            value={4}
+            value={dashboardMetrics?.activeCustomerSupport ?? 0}
             icon={Users}
             description="Live & WIP tickets"
           />
         </div>
 
         {/* Charts Section */}
-        <BugChart />
+        <BugChart bugReports={bugReports} />
 
         {/* Stability Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -146,7 +168,7 @@ export const Dashboard: React.FC = () => {
         <CustomerSupportTable customerTickets={customerTickets} />
 
         {/* Development Pipeline */}
-        <DevelopmentPipeline />
+        <DevelopmentPipeline developmentTickets={developmentTickets} />
 
         {/* Admin Forms - Only show for admins */}
         {isAdmin && (
