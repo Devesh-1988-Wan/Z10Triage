@@ -26,8 +26,10 @@ export const SignupForm: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Updated password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
       return;
     }
 
@@ -38,6 +40,7 @@ export const SignupForm: React.FC = () => {
         title: "Account created!",
         description: "Please check your email to verify your account.",
       });
+      navigate("/auth?mode=login")
     } else {
       setError(result.error || 'Failed to create account');
     }
