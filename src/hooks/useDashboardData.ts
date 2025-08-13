@@ -148,13 +148,13 @@ const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
 
 
 export const useDashboardData = () => {
-  const { user } = useAuth(); // Get the current authenticated user
+  const { user } = useAuth();
   const [bugReports, setBugReports] = useState<BugReport[]>([]);
   const [customerTickets, setCustomerTickets] = useState<CustomerSupportTicket[]>([]);
   const [developmentTickets, setDevelopmentTickets] = useState<DevelopmentTicket[]>([]);
   const [securityFixes, setSecurityFixes] = useState<SecurityFix[]>([]);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
-  const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null); // NEW state for layout
+  const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,47 +163,40 @@ export const useDashboardData = () => {
     setError(null);
 
     try {
-      // Fetch dynamic layout first
       let currentLayout: DashboardLayout | null = null;
+
       if (user?.id) {
-        // Try to fetch user-specific layout
+        // Try to fetch user-specific layout first
         const { data: userLayout, error: userLayoutError } = await supabase
           .from('dashboard_layout')
           .select('layout')
           .eq('user_id', user.id)
-          .single();
+          .limit(1);
 
-        if (userLayoutError && userLayoutError.code !== 'PGRST116') { // PGRST116 means no rows found
-          console.error('Error fetching user layout:', userLayoutError);
-          // Don't throw, just fall back to default
-        } else if (userLayout) {
-          currentLayout = userLayout.layout as unknown as DashboardLayout;
-        }
-      }
-
-      // If no user-specific layout or user is not logged in, fetch default layout
-      if (!currentLayout) {
-        const { data: defaultLayout, error: defaultLayoutError } = await supabase
-          .from('dashboard_layout')
-          .select('layout')
-          .eq('is_default', true)
-          .single();
-
-        if (defaultLayoutError && defaultLayoutError.code !== 'PGRST116') {
-          console.error('Error fetching default layout:', defaultLayoutError);
-          // Fallback to hardcoded default if DB default fails
-          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
-        } else if (defaultLayout) {
-          currentLayout = defaultLayout.layout as unknown as DashboardLayout;
+        if (userLayout && userLayout.length > 0) {
+          currentLayout = userLayout[0].layout as unknown as DashboardLayout;
         } else {
-          // If no default layout in DB, use hardcoded default
-          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+          // If no user-specific layout, try to fetch the default layout from the DB
+          const { data: defaultLayout, error: defaultLayoutError } = await supabase
+            .from('dashboard_layout')
+            .select('layout')
+            .eq('is_default', true)
+            .limit(1);
+
+          if (defaultLayout && defaultLayout.length > 0) {
+            currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
+          } else {
+            // As a final fallback, use the hardcoded default layout
+            currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+          }
         }
+      } else {
+        // If no user is logged in, use the hardcoded default layout
+        currentLayout = DEFAULT_DASHBOARD_LAYOUT;
       }
+
       setDashboardLayout(currentLayout);
 
-
-      // Fetch all other dashboard data concurrently
       const [
         bugReportsRes,
         customerTicketsRes,
@@ -297,14 +290,13 @@ export const useDashboardData = () => {
   };
 
   useEffect(() => {
-    // Only fetch data if user is defined (after initial auth check)
     if (user !== undefined) {
       fetchData();
     }
-  }, [user]); // Re-fetch when user changes (e.g., logs in/out)
+  }, [user]);
 
   return {
-    dashboardLayout, // NEW: Return the fetched layout
+    dashboardLayout,
     bugReports,
     customerTickets,
     developmentTickets,
