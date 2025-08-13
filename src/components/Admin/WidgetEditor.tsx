@@ -73,12 +73,6 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
     }
   }, [currentLayout]);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-
-  if (!isAdmin) {
-    return null; // Should be handled by ProtectedRoute, but good for redundancy
-  }
-
   const handleSaveLayout = async () => {
     if (!user?.id) {
       toast({
