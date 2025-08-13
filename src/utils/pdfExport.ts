@@ -8,21 +8,28 @@ export const generatePDF = async (elementId: string, filename: string = 'z10-das
       throw new Error('Element not found');
     }
 
-    // Temporarily remove any animations or transitions for better PDF quality
-    const originalStyle = element.style.cssText;
-    element.style.cssText = originalStyle + '; animation: none !important; transition: none !important;';
+    // Create an off-screen container to render the element for the canvas
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    document.body.appendChild(tempContainer);
+    
+    // Clone the element and append it to the temporary container
+    const clonedElement = element.cloneNode(true) as HTMLElement;
+    tempContainer.appendChild(clonedElement);
 
-    const canvas = await html2canvas(element, {
-      scale: 2, // Higher quality
+    const canvas = await html2canvas(clonedElement, {
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      height: element.scrollHeight,
-      width: element.scrollWidth
+      height: clonedElement.scrollHeight,
+      width: clonedElement.scrollWidth
     });
 
-    // Restore original styles
-    element.style.cssText = originalStyle;
+    // Clean up the temporary element
+    document.body.removeChild(tempContainer);
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
@@ -31,18 +38,16 @@ export const generatePDF = async (elementId: string, filename: string = 'z10-das
       format: 'a4'
     });
 
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295; // A4 height in mm
+    const imgWidth = 210;
+    const pageHeight = 295;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     let heightLeft = imgHeight;
 
     let position = 0;
 
-    // Add first page
     pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
 
-    // Add additional pages if needed
     while (heightLeft >= 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
@@ -50,7 +55,6 @@ export const generatePDF = async (elementId: string, filename: string = 'z10-das
       heightLeft -= pageHeight;
     }
 
-    // Add metadata
     pdf.setProperties({
       title: 'Z10 Dashboard Report',
       subject: 'Development Progress & Bug Tracking Report',
