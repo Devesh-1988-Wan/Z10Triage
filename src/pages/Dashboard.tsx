@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
+import { AdminForms } from '@/components/AdminForms';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -171,7 +172,7 @@ export const Dashboard: React.FC = () => {
         <DevelopmentPipeline developmentTickets={developmentTickets} />
 
         {/* Admin Forms - Only show for admins */}
-        {isAdmin && (
+        {isAdmin && bugReports && customerTickets && developmentTickets && (
           <AdminForms 
             onDataUpdate={refetch}
             bugReports={bugReports}
