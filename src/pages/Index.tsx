@@ -8,9 +8,13 @@ const Index = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Redirect authenticated users to dashboard
+    // Redirect authenticated users based on their role
     if (user) {
-      navigate('/dashboard');
+      if (user.role === 'super_admin' || user.role === 'admin') {
+        navigate('/dashboard/editor');
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
