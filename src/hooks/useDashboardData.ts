@@ -164,9 +164,9 @@ export const useDashboardData = () => {
 
     try {
       let currentLayout: DashboardLayout | null = null;
+      let userLayoutFound = false;
 
       if (user?.id) {
-        // Try to fetch user-specific layout first
         const { data: userLayout, error: userLayoutError } = await supabase
           .from('dashboard_layout')
           .select('layout')
@@ -175,26 +175,24 @@ export const useDashboardData = () => {
 
         if (userLayout && userLayout.length > 0) {
           currentLayout = userLayout[0].layout as unknown as DashboardLayout;
-        } else {
-          // If no user-specific layout, try to fetch the default layout from the DB
-          const { data: defaultLayout, error: defaultLayoutError } = await supabase
-            .from('dashboard_layout')
-            .select('layout')
-            .eq('is_default', true)
-            .limit(1);
-
-          if (defaultLayout && defaultLayout.length > 0) {
-            currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
-          } else {
-            // As a final fallback, use the hardcoded default layout
-            currentLayout = DEFAULT_DASHBOARD_LAYOUT;
-          }
+          userLayoutFound = true;
         }
-      } else {
-        // If no user is logged in, use the hardcoded default layout
-        currentLayout = DEFAULT_DASHBOARD_LAYOUT;
       }
 
+      if (!userLayoutFound) {
+        const { data: defaultLayout, error: defaultLayoutError } = await supabase
+          .from('dashboard_layout')
+          .select('layout')
+          .eq('is_default', true)
+          .limit(1);
+
+        if (defaultLayout && defaultLayout.length > 0) {
+          currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
+        } else {
+          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+        }
+      }
+      
       setDashboardLayout(currentLayout);
 
       const [
