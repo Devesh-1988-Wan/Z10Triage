@@ -10,6 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
 import { Link } from 'react-router-dom';
+import { AdminForms } from '@/components/AdminForms';
+import { cn } from '@/lib/utils';
 
 export const Dashboard: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -21,26 +23,28 @@ export const Dashboard: React.FC = () => {
     dashboardMetrics,
     isLoading: isDataLoading,
     error,
+    refetch,
   } = useDashboardData();
   const { toast } = useToast();
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
 
   const handleExportPdf = async () => {
     try {
       await generatePDF('dashboard-content', 'z10-dashboard-report');
       toast({
-        title: "PDF Generated",
-        description: "Dashboard report has been downloaded successfully",
+        title: 'PDF Generated',
+        description: 'Dashboard report has been downloaded successfully',
       });
     } catch (error) {
       toast({
-        title: "Export Failed",
-        description: "Failed to generate PDF report. Please try again.",
-        variant: "destructive",
+        title: 'Export Failed',
+        description: 'Failed to generate PDF report. Please try again.',
+        variant: 'destructive',
       });
     }
   };
-
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   if (isAuthLoading || isDataLoading) {
     return (
@@ -70,8 +74,6 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
-
   return (
     <DashboardLayout onExportPdf={handleExportPdf}>
       <div id="dashboard-content" className="space-y-6">
@@ -99,16 +101,20 @@ export const Dashboard: React.FC = () => {
         {hasWidgets ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {dashboardLayout.widgets.map((widgetConfig) => (
-              <WidgetRenderer
+              <div
                 key={widgetConfig.id}
-                config={widgetConfig}
-                data={{
-                  bugReports,
-                  customerTickets,
-                  developmentTickets,
-                  dashboardMetrics
-                }}
-              />
+                className={cn(`col-span-${widgetConfig.layout.w}`)}
+              >
+                <WidgetRenderer
+                  config={widgetConfig}
+                  data={{
+                    bugReports,
+                    customerTickets,
+                    developmentTickets,
+                    dashboardMetrics,
+                  }}
+                />
+              </div>
             ))}
           </div>
         ) : (
@@ -124,6 +130,28 @@ export const Dashboard: React.FC = () => {
                   </span>
                 )}
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin Forms - Only show for admins */}
+        {isAdmin && (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Data Management
+              </CardTitle>
+              <CardDescription>
+                Create and manage bug reports, customer support tickets, and development tasks
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminForms
+                onDataUpdate={refetch}
+                bugReports={bugReports}
+                customerTickets={customerTickets}
+                developmentTickets={developmentTickets}
+              />
             </CardContent>
           </Card>
         )}
