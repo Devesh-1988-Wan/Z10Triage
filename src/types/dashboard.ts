@@ -67,3 +67,18 @@ export interface SecurityFix {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// NEW: Define a type for a single widget's configuration
+export interface WidgetConfig {
+  id: string; // Unique ID for the widget instance
+  component: 'MetricCard' | 'BugChart' | 'CustomerSupportTable' | 'DevelopmentPipeline'; // The React component name
+  title: string; // Title for the widget
+  description?: string; // Optional description
+  props: Record<string, any>; // Props specific to the component
+  layout: { x: number; y: number; w: number; h: number }; // Grid layout properties (x, y, width, height)
+}
+
+// NEW: Define the overall dashboard layout structure
+export interface DashboardLayout {
+  widgets: WidgetConfig[];
+}
