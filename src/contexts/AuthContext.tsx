@@ -20,13 +20,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener to handle all session changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile from our profiles table
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -49,30 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Check for existing session
+    // Initial check for session after the listener is set up
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      
-      if (session?.user) {
-        // Fetch user profile from our profiles table
-        setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              role: profile.role as 'super_admin' | 'admin' | 'viewer',
-              name: profile.name
-            });
-          }
-        }, 0);
+      if (session) {
+        setSession(session);
+        // The onAuthStateChange listener will handle fetching the profile
       }
-      
       setIsLoading(false);
     });
 
