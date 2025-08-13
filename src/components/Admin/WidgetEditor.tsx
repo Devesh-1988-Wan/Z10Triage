@@ -198,9 +198,43 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     if (editingWidget) {
-      setEditingWidget(prev => ({ ...prev!, [id]: value }));
+      if (id.startsWith('props.change.')) {
+        const propKey = id.split('.')[2];
+        setEditingWidget(prev => ({
+          ...prev!,
+          props: {
+            ...prev!.props,
+            change: { ...prev!.props?.change, [propKey]: value },
+          },
+        }));
+      } else if (id.startsWith('layout.')) {
+        const layoutKey = id.split('.')[1];
+        setEditingWidget(prev => ({
+          ...prev!,
+          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
+        }));
+      } else {
+        setEditingWidget(prev => ({ ...prev!, [id]: value }));
+      }
     } else {
-      setNewWidgetForm(prev => ({ ...prev!, [id]: value }));
+      if (id.startsWith('props.change.')) {
+        const propKey = id.split('.')[2];
+        setNewWidgetForm(prev => ({
+          ...prev!,
+          props: {
+            ...prev!.props,
+            change: { ...prev!.props?.change, [propKey]: value },
+          },
+        }));
+      } else if (id.startsWith('layout.')) {
+        const layoutKey = id.split('.')[1];
+        setNewWidgetForm(prev => ({
+          ...prev!,
+          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
+        }));
+      } else {
+        setNewWidgetForm(prev => ({ ...prev!, [id]: value }));
+      }
     }
   };
 
