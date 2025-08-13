@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-// Remove specific widget imports:
+// Remove direct imports of widgets, they will be rendered dynamically
 // import { MetricCard } from '@/components/MetricCard';
 // import { BugChart } from '@/components/BugChart';
-// ... other imports
+// import { CustomerSupportTable } from '@/components/CustomerSupportTable';
+// import { DevelopmentPipeline } from '@/components/DevelopmentPipeline';
 
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Settings } from 'lucide-react'; // Added Settings icon
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
-import { AdminForms } from '@/components/AdminForms';
-import { WidgetRenderer } from '@/components/WidgetRenderer'; // New Component
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Added Card components for consistent styling
+import { Button } from '@/components/ui/button'; // Import Button
+import { WidgetRenderer } from '@/components/WidgetRenderer'; // NEW: Import WidgetRenderer
+import { WidgetEditor } from '@/components/Admin/WidgetEditor'; // NEW: Import WidgetEditor
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const {
-    dashboardLayout, // Use the new layout data
+    dashboardLayout, // Now fetching dynamic layout
     bugReports,
     customerTickets,
     developmentTickets,
@@ -29,51 +31,162 @@ export const Dashboard: React.FC = () => {
   } = useDashboardData();
   const { toast } = useToast();
 
+  const [showEditor, setShowEditor] = useState(false); // State to toggle widget editor visibility
+
   const handleExportPdf = async () => {
-    // ... existing function
+    try {
+      await generatePDF('dashboard-content', 'z10-dashboard-report');
+      toast({
+        title: "PDF Generated",
+        description: "Dashboard report has been downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   if (isLoading) {
-    // ... existing loading state
+    return (
+      <DashboardLayout onExportPdf={handleExportPdf}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (error) {
-    // ... existing error state
+    return (
+      <DashboardLayout onExportPdf={handleExportPdf}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Alert variant="destructive" className="w-full max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load dashboard data. Please try again later.
+              <br />
+              {error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
     <DashboardLayout onExportPdf={handleExportPdf}>
       <div id="dashboard-content" className="space-y-6">
         {/* Header Section */}
-        {/* ... existing header */}
-
-        {/* Dynamic Widget Rendering */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {dashboardLayout?.widgets.map((widgetConfig) => (
-            <WidgetRenderer key={widgetConfig.id} config={widgetConfig} data={{
-              bugReports,
-              customerTickets,
-              developmentTickets,
-              dashboardMetrics
-            }} />
-          ))}
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Z10 Updates - August 13, 2025
+            </h1>
+            <p className="text-muted-foreground">
+              Development progress, bug tracking, and customer support overview
+            </p>
+          </div>
+          {isAdmin && (
+            <Button variant="outline" onClick={() => setShowEditor(!showEditor)}>
+              <Settings className="w-4 h-4 mr-2" />
+              {showEditor ? 'Hide Editor' : 'Customize Dashboard'}
+            </Button>
+          )}
         </div>
 
-        {/* ... existing sections */}
+        {/* Dynamic Widget Rendering */}
+        {dashboardLayout && dashboardLayout.widgets.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {dashboardLayout.widgets.map((widgetConfig) => (
+              <WidgetRenderer
+                key={widgetConfig.id}
+                config={widgetConfig}
+                data={{
+                  bugReports,
+                  customerTickets,
+                  developmentTickets,
+                  dashboardMetrics
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card className="shadow-card">
+            <CardContent className="pt-6 text-center">
+              <p className="text-muted-foreground">No widgets configured for this dashboard. {isAdmin && "Use 'Customize Dashboard' to add some!"}</p>
+            </CardContent>
+          </Card>
+        )}
 
-        {isAdmin && bugReports && customerTickets && developmentTickets && (
-          <AdminForms
-            onDataUpdate={refetch}
-            bugReports={bugReports}
-            customerTickets={customerTickets}
-            developmentTickets={developmentTickets}
-          />
+
+        {/* Admin Forms - Only show for admins */}
+        {isAdmin && (
+          <>
+            {showEditor && (
+              <WidgetEditor
+                currentLayout={dashboardLayout}
+                onLayoutSave={refetch} // Pass refetch to update dashboard after saving changes
+              />
+            )}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {/* <Plus className="w-5 h-5" /> */}
+                  Data Management
+                </CardTitle>
+                <CardDescription>
+                  Create and manage bug reports, customer support tickets, and development tasks
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* AdminForms component remains for creating new data entries */}
+                <AdminForms
+                  onDataUpdate={refetch}
+                  bugReports={bugReports}
+                  customerTickets={customerTickets}
+                  developmentTickets={developmentTickets}
+                />
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {/* Footer Information */}
-        {/* ... existing footer */}
+        <div className="bg-gradient-card rounded-lg p-6 border border-border">
+          <h3 className="text-lg font-semibold mb-3">Security & Infrastructure Updates</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">Security Fixes - In Progress</h4>
+              <p className="text-muted-foreground">
+                Customer reported vulnerabilities are being addressed with priority fixes.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Commerce Connector 2.0 - 96% Complete</h4>
+              <p className="text-muted-foreground">
+                CC2.0 integration completed with additional requirements implementation.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">GraphQL Phase III</h4>
+              <p className="text-muted-foreground">
+                Development on hold due to bandwidth. Training sessions continue (last session: Aug 20th).
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Hotfix Version 10.2.1.2</h4>
+              <p className="text-muted-foreground">
+                Planned for critical priority tenant tickets across multiple customers.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
