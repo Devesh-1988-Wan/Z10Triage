@@ -16,22 +16,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'; // Import Button
 import { WidgetRenderer } from '@/components/WidgetRenderer'; // NEW: Import WidgetRenderer
 import { WidgetEditor } from '@/components/Admin/WidgetEditor'; // NEW: Import WidgetEditor
+import { AdminForms } from '@/components/AdminForms'; // Import AdminForms
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const {
     dashboardLayout, // Now fetching dynamic layout
     bugReports,
     customerTickets,
     developmentTickets,
     dashboardMetrics,
-    isLoading,
+    isLoading: isDataLoading,
     error,
     refetch
   } = useDashboardData();
   const { toast } = useToast();
 
-  const [showEditor, setShowEditor] = useState(false); // State to toggle widget editor visibility
+  // State to toggle widget editor visibility, initially shown for admins with empty layouts
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
+  const [showEditor, setShowEditor] = useState(isAdmin && !hasWidgets);
 
   const handleExportPdf = async () => {
     try {
@@ -49,9 +53,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-
-  if (isLoading) {
+  if (isAuthLoading || isDataLoading) {
     return (
       <DashboardLayout onExportPdf={handleExportPdf}>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -101,7 +103,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Dynamic Widget Rendering */}
-        {dashboardLayout && dashboardLayout.widgets.length > 0 ? (
+        {hasWidgets ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {dashboardLayout.widgets.map((widgetConfig) => (
               <WidgetRenderer
@@ -117,11 +119,13 @@ export const Dashboard: React.FC = () => {
             ))}
           </div>
         ) : (
-          <Card className="shadow-card">
-            <CardContent className="pt-6 text-center">
-              <p className="text-muted-foreground">No widgets configured for this dashboard. {isAdmin && "Use 'Customize Dashboard' to add some!"}</p>
-            </CardContent>
-          </Card>
+          !showEditor && (
+            <Card className="shadow-card">
+              <CardContent className="pt-6 text-center">
+                <p className="text-muted-foreground">No widgets configured for this dashboard. {isAdmin && "Use 'Customize Dashboard' to add some!"}</p>
+              </CardContent>
+            </Card>
+          )
         )}
 
 
