@@ -52,7 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSession(session);
-        // The onAuthStateChange listener will handle fetching the profile
       }
       setIsLoading(false);
     });
