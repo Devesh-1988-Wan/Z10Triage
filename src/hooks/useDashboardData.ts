@@ -4,7 +4,7 @@ import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, Dashb
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get user ID
 
 // Default dashboard layout if no custom layout is found
-const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
+export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   widgets: [
     {
       id: 'metric-bugs-fixed',
@@ -189,7 +189,9 @@ export const useDashboardData = () => {
         if (defaultLayout && defaultLayout.length > 0) {
           currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
         } else {
-          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+          // If no user-specific and no default layout in DB, we'll return an empty layout.
+          // The Dashboard component will handle showing the options to the admin.
+          currentLayout = { widgets: [] };
         }
       }
       
