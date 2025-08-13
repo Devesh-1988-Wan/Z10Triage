@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { User as DashboardUser } from '@/types/dashboard';
 
 interface AuthContextType {
@@ -20,18 +20,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener to handle all session changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        
-        if (session?.user) {
+    // This function will handle the initial state and any subsequent auth changes
+    const handleAuthStateChange = async (session: Session | null) => {
+      setSession(session);
+
+      if (session?.user) {
+        try {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
-          
+
           if (profile) {
             setUser({
               id: profile.id,
@@ -40,29 +40,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile.name
             });
           }
-        } else {
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
           setUser(null);
+        } finally {
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
-      }
-    );
-
-    // Initial check for session after the listener is set up
-    const checkInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setSession(session);
-        }
-      } catch (error) {
-        console.error("Error fetching session:", error);
-      } finally {
+      } else {
+        setUser(null);
         setIsLoading(false);
       }
     };
-    
-    checkInitialSession();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Set loading to true on every auth change to prevent a brief blank screen
+        setIsLoading(true);
+        handleAuthStateChange(session);
+      }
+    );
+
+    // Perform initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange(session);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
