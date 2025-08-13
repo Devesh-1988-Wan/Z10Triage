@@ -56,7 +56,7 @@ interface WidgetEditorProps {
 export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLayoutSave }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [layoutToEdit, setLayoutToEdit] = useState<DashboardLayout>(currentLayout || { widgets: [] });
+  const [layoutToEdit, setLayoutToEdit] = useState<DashboardLayout>(currentLayout && currentLayout.widgets ? currentLayout : { widgets: [] });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<WidgetConfig | null>(null);
   const [newWidgetForm, setNewWidgetForm] = useState<Partial<WidgetConfig>>({
