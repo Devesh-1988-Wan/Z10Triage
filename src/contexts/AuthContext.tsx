@@ -1,5 +1,3 @@
-// src/contexts/AuthContext.tsx
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
@@ -54,23 +52,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setIsLoading(true);
-      await handleUserSession(session);
-    });
-    
-    // Initial check on component mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleUserSession(session);
     });
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setIsLoading(true);
+      }
+      await handleUserSession(session);
+    });
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInitialized]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setIsLoading(false);
     return { success: !error, error: error?.message };
   };
 
@@ -82,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: { emailRedirectTo: redirectUrl, data: { name } }
     });
-    setIsLoading(false);
     return { success: !error, error: error?.message };
   };
 
