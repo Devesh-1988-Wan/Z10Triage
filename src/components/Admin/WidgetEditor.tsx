@@ -240,54 +240,27 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
   };
 
   const handleSelectChange = (id: string, value: string) => {
-    if (editingWidget) {
-      if (id === 'component') {
-        const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
-        setEditingWidget(prev => ({
-          ...prev!,
-          component: value as any,
-          props: newComponentType?.defaultProps || {}, // Reset props when component type changes
-        }));
-      } else if (id.startsWith('props.')) {
-        const propKey = id.split('.')[1];
-        setEditingWidget(prev => ({
-          ...prev!,
-          props: { ...prev!.props, [propKey]: value },
-        }));
-      } else if (id.startsWith('layout.')) {
-        const layoutKey = id.split('.')[1];
-        setEditingWidget(prev => ({
-          ...prev!,
-          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
-        }));
-      } else {
-        setEditingWidget(prev => ({ ...prev!, [id]: value }));
-      }
-    } else {
-      if (id === 'component') {
-        const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          component: value as any,
-          props: newComponentType?.defaultProps || {},
-        }));
-      } else if (id.startsWith('props.')) {
-        const propKey = id.split('.')[1];
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          props: { ...prev!.props, [propKey]: value },
-        }));
-      } else if (id.startsWith('layout.')) {
-        const layoutKey = id.split('.')[1];
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
-        }));
-      } else {
-        setNewWidgetForm(prev => ({ ...prev!, [id]: value }));
-      }
-    }
-  };
+    const stateSetter = editingWidget ? setEditingWidget : setNewWidgetForm;
+    
+    stateSetter(prev => {
+        const newFormState = { ...prev! };
+        if (id === 'component') {
+            const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
+            newFormState.component = value as any;
+            newFormState.props = newComponentType?.defaultProps || {};
+        } else if (id.startsWith('props.')) {
+            const propKey = id.split('.')[1];
+            newFormState.props = { ...newFormState.props, [propKey]: value };
+        } else if (id.startsWith('layout.')) {
+            const layoutKey = id.split('.')[1];
+            newFormState.layout = { ...newFormState.layout, [layoutKey]: parseInt(value) };
+        } else {
+            (newFormState as any)[id] = value;
+        }
+        return newFormState;
+    });
+};
+
 
   const currentFormState = editingWidget || newWidgetForm;
   const isMetricCard = currentFormState.component === 'MetricCard';
