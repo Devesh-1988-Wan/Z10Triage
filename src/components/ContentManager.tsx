@@ -29,7 +29,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast({
           title: "Invalid file type",
@@ -39,7 +38,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
         return;
       }
       
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
@@ -90,12 +88,10 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
     try {
       let imageUrl: string | null = null;
 
-      // Upload image if provided
       if (newContent.imageFile) {
         imageUrl = await uploadImage(newContent.imageFile);
       }
 
-      // Insert content into database
       const { error } = await supabase
         .from('widget_content')
         .insert({
@@ -114,7 +110,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
         description: "The new content has been saved to the database."
       });
 
-      // Reset form
       setNewContent({
         title: '',
         description: '',
@@ -123,11 +118,9 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
         imageFile: null
       });
 
-      // Clear file input
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
-      // Refresh data
       onContentUpdate();
 
     } catch (error) {
@@ -169,7 +162,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
 
   return (
     <div className="space-y-6">
-      {/* Add New Content Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -276,7 +268,6 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
         </CardContent>
       </Card>
 
-      {/* Existing Content List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
