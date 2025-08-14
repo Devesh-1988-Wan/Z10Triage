@@ -15,13 +15,6 @@ interface StatsWidgetProps {
   }[];
 }
 
-const defaultStatsData = [
-  { period: 'Week 1', resolved: 12, created: 15, efficiency: 80 },
-  { period: 'Week 2', resolved: 18, created: 14, efficiency: 129 },
-  { period: 'Week 3', resolved: 22, created: 19, efficiency: 116 },
-  { period: 'Week 4', resolved: 16, created: 13, efficiency: 123 }
-];
-
 const pieData = [
   { name: 'Completed', value: 68, color: '#10b981' },
   { name: 'In Progress', value: 24, color: '#f59e0b' },
@@ -31,11 +24,11 @@ const pieData = [
 export const StatsWidget: React.FC<StatsWidgetProps> = ({ 
   title = "Performance Analytics", 
   description = "Detailed insights and metrics",
-  statsData = defaultStatsData 
+  statsData = [] 
 }) => {
   const totalResolved = statsData.reduce((sum, week) => sum + week.resolved, 0);
   const totalCreated = statsData.reduce((sum, week) => sum + week.created, 0);
-  const avgEfficiency = Math.round(statsData.reduce((sum, week) => sum + week.efficiency, 0) / statsData.length);
+  const avgEfficiency = statsData.length > 0 ? Math.round(statsData.reduce((sum, week) => sum + week.efficiency, 0) / statsData.length) : 0;
 
   return (
     <Card className="shadow-card">
@@ -67,7 +60,7 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
             </div>
             <div className="text-center p-3 bg-accent/10 rounded-lg">
               <Zap className="w-6 h-6 mx-auto mb-2 text-accent-foreground" />
-              <div className="text-2xl font-bold text-accent-foreground">{Math.round((totalResolved / totalCreated) * 100)}%</div>
+              <div className="text-2xl font-bold text-accent-foreground">{totalCreated > 0 ? Math.round((totalResolved / totalCreated) * 100) : 0}%</div>
               <div className="text-xs text-muted-foreground">Resolution Rate</div>
             </div>
           </div>
