@@ -126,7 +126,7 @@ export const useDashboardData = (dashboardId?: string) => {
 
     try {
       let currentLayout: DashboardLayout | null = null;
-      let layoutQuery = supabase.from('dashboard_layout').select('layout');
+      let layoutQuery = supabase.from('dashboard_layout').select('layout, dashboard_name, dashboard_description');
 
       if (dashboardId && dashboardId !== 'new') {
         layoutQuery = layoutQuery.eq('id', dashboardId);
@@ -141,17 +141,25 @@ export const useDashboardData = (dashboardId?: string) => {
       if (layoutError && layoutError.code !== 'PGRST116') throw layoutError;
       
       if (layoutData) {
-        currentLayout = layoutData.layout as unknown as DashboardLayout;
+        const layoutJson = layoutData.layout as unknown as { widgets: WidgetConfig[] };
+        currentLayout = {
+            name: layoutData.dashboard_name || 'My Dashboard',
+            description: layoutData.dashboard_description || '',
+            widgets: layoutJson.widgets || []
+        };
       } else if (dashboardId === 'new') {
-        currentLayout = { widgets: [] }; // Start with a blank layout for a new dashboard
+        currentLayout = { name: 'New Dashboard', description: '', widgets: [] }; // Start with a blank layout for a new dashboard
       } else if (!layoutData && dashboardId) {
         setError("Dashboard not found.");
         setIsLoading(false);
         return;
       } else {
-        currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+        currentLayout = {
+          name: 'Default Dashboard',
+          description: 'This is the default system dashboard.',
+          ...DEFAULT_DASHBOARD_LAYOUT
+      };
       }
-
 
       setDashboardLayout(currentLayout);
 
