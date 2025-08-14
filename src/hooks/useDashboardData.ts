@@ -142,9 +142,16 @@ export const useDashboardData = (dashboardId?: string) => {
       
       if (layoutData) {
         currentLayout = layoutData.layout as unknown as DashboardLayout;
-      } else if (dashboardId === 'new' || !layoutData) {
+      } else if (dashboardId === 'new') {
+        currentLayout = { widgets: [] }; // Start with a blank layout for a new dashboard
+      } else if (!layoutData && dashboardId) {
+        setError("Dashboard not found.");
+        setIsLoading(false);
+        return;
+      } else {
         currentLayout = DEFAULT_DASHBOARD_LAYOUT;
       }
+
 
       setDashboardLayout(currentLayout);
 
