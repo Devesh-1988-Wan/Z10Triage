@@ -16,30 +16,6 @@ interface ProgressWidgetProps {
   }[];
 }
 
-const defaultData = [
-  {
-    projectName: "Commerce Connector 2.0",
-    completion: 96,
-    status: 'on-track' as const,
-    dueDate: "2024-08-30",
-    team: "Backend Team"
-  },
-  {
-    projectName: "GraphQL Phase III",
-    completion: 45,
-    status: 'delayed' as const,
-    dueDate: "2024-09-15",
-    team: "API Team"
-  },
-  {
-    projectName: "Security Audit",
-    completion: 78,
-    status: 'on-track' as const,
-    dueDate: "2024-08-25",
-    team: "Security Team"
-  }
-];
-
 const statusColors = {
   'on-track': 'bg-success text-success-foreground',
   'delayed': 'bg-destructive text-destructive-foreground',
@@ -50,7 +26,7 @@ const statusColors = {
 export const ProgressWidget: React.FC<ProgressWidgetProps> = ({ 
   title = "Project Progress", 
   description = "Track development milestones and delivery status",
-  data = defaultData 
+  data = [] 
 }) => {
   return (
     <Card className="shadow-card">
