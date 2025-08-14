@@ -1,19 +1,27 @@
+// src/pages/WidgetEditorPage.tsx
+
 import React from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { WidgetEditor } from '@/components/Admin/WidgetEditor';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AdminForms } from '@/components/AdminForms';
 
 export const WidgetEditorPage: React.FC = () => {
+  const { dashboardId } = useParams<{ dashboardId: string }>();
   const {
     dashboardLayout,
+    bugReports,
+    customerTickets,
+    developmentTickets,
+    widgetContent,
     isLoading,
     error,
     refetch
-  } = useDashboardData();
+  } = useDashboardData(dashboardId);
 
   const handleExportPdf = () => {
     // PDF export is handled on the main dashboard page
@@ -58,7 +66,7 @@ export const WidgetEditorPage: React.FC = () => {
           <Button asChild variant="outline">
             <Link to="/dashboard">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              Back to Dashboard Hub
             </Link>
           </Button>
         </div>
@@ -66,6 +74,15 @@ export const WidgetEditorPage: React.FC = () => {
           currentLayout={dashboardLayout}
           onLayoutSave={refetch}
         />
+        <div className="mt-8">
+          <AdminForms
+            onDataUpdate={refetch}
+            bugReports={bugReports}
+            customerTickets={customerTickets}
+            developmentTickets={developmentTickets}
+            widgetContent={widgetContent}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );
