@@ -72,7 +72,7 @@ export interface SecurityFix {
 
 export interface WidgetConfig {
   id: string;
-  component: 'MetricCard' | 'BugChart' | 'CustomerSupportTable' | 'DevelopmentPipeline' | 'ImageWidget' | 'ProgressWidget' | 'AnnouncementWidget' | 'StatsWidget' | 'SecurityUpdatesWidget';
+  component: 'MetricCard' | 'BugChart' | 'CustomerSupportTable' | 'DevelopmentPipeline' | 'ImageWidget' | 'ProgressWidget' | 'AnnouncementWidget' | 'StatsWidget' | 'SecurityUpdatesWidget' | 'SalesChart';
   title: string;
   description?: string;
   props: Record<string, any>;
