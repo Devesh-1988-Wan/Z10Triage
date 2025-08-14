@@ -1,3 +1,4 @@
+// src/types/dashboard.ts
 export interface User {
   id: string;
   email: string;
@@ -75,7 +76,7 @@ export interface WidgetConfig {
   title: string;
   description?: string;
   props: Record<string, any>;
-  layout: { x: number; y: number; w: number; h: number };
+  layout: { x: number; y: number; w: number; h: number; i: string; };
 }
 
 export interface DashboardLayout {
