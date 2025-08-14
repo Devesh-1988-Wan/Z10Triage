@@ -9,6 +9,7 @@ import { ProgressWidget } from './widgets/ProgressWidget';
 import { AnnouncementWidget } from './widgets/AnnouncementWidget';
 import { StatsWidget } from './widgets/StatsWidget';
 import { SecurityUpdatesWidget } from './widgets/SecurityUpdatesWidget';
+import { SalesChart } from './widgets/SalesChart';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -78,6 +79,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, on
         return <div onClick={onClick} className="cursor-pointer"><StatsWidget title={title} description={description} /></div>;
       case 'SecurityUpdatesWidget':
         return <div onClick={onClick} className="cursor-pointer"><SecurityUpdatesWidget /></div>;
+      case 'SalesChart':
+        return <SalesChart />;
       default:
         return (
           <Alert variant="destructive">
