@@ -12,7 +12,7 @@ CREATE TABLE public.dashboard_layout (
 ALTER TABLE public.dashboard_layout ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for dashboard layout
-CREATE POLICY "Everyone can view dashboard layout" ON public.dashboard_layout FOR SELECT USING (true);
+CREATE POLICY "Users can view their own dashboard layout" ON public.dashboard_layout FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Admins can manage all layouts" ON public.dashboard_layout FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('super_admin', 'admin'))
 );
