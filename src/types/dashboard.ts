@@ -80,5 +80,7 @@ export interface WidgetConfig {
 
 // NEW: Define the overall dashboard layout structure
 export interface DashboardLayout {
+  name?: string;
+  description?: string;
   widgets: WidgetConfig[];
 }
