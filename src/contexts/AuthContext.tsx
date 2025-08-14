@@ -1,3 +1,5 @@
+// src/contexts/AuthContext.tsx
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
@@ -35,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
           } else {
             setUser({
-              id: profile.id,
+              id: profile.user_id,
               email: profile.email,
               role: profile.role as 'super_admin' | 'admin' | 'viewer',
               name: profile.name
