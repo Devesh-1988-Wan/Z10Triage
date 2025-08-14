@@ -57,9 +57,11 @@ const METRIC_CARD_TREND_OPTIONS = [
 interface WidgetEditorProps {
   currentLayout: DashboardLayout | null;
   onLayoutSave: () => void; // Callback to refresh dashboard data after saving
+  dashboardName?: string;
+  onDashboardNameChange?: (name: string) => void;
 }
 
-export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLayoutSave }) => {
+export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLayoutSave, dashboardName, onDashboardNameChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [layoutToEdit, setLayoutToEdit] = useState<DashboardLayout>(currentLayout && currentLayout.widgets ? currentLayout : { widgets: [] });
@@ -104,7 +106,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
         // Update existing layout
         const { error: updateError } = await supabase
           .from('dashboard_layout')
-          .update({ layout: layoutToEdit })
+          .update({ layout: layoutToEdit, dashboard_name: dashboardName })
           .eq('id', existingLayout.id);
 
         if (updateError) throw updateError;
@@ -112,7 +114,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
         // Insert new layout
         const { error: insertError } = await supabase
           .from('dashboard_layout')
-          .insert({ user_id: user.id, layout: layoutToEdit, is_default: false }); // User-specific layout is not default
+          .insert({ user_id: user.id, layout: layoutToEdit, is_default: false, dashboard_name: dashboardName }); // User-specific layout is not default
 
         if (insertError) throw insertError;
       }
@@ -303,6 +305,15 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="dashboardName">Dashboard Name</Label>
+            <Input
+              id="dashboardName"
+              value={dashboardName}
+              onChange={(e) => onDashboardNameChange?.(e.target.value)}
+              placeholder="Enter dashboard name"
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <Button onClick={openAddDialog} variant="outline">
               <Plus className="w-4 h-4 mr-2" /> Add New Widget
