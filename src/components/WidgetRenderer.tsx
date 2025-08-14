@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { EditableText } from './EditableText';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Map string icon names to LucideReact components
 import { Bug, TrendingUp, Users, Clock, Shield, Zap } from 'lucide-react';
@@ -30,12 +31,13 @@ interface WidgetRendererProps {
     dashboardMetrics: DashboardMetrics | null;
     widgetContent: WidgetContent[];
   };
+  isLoading: boolean;
   onClick: () => void;
   onUpdate: (widget: WidgetConfig) => void;
   isEditable: boolean;
 }
 
-export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, onClick, onUpdate, isEditable }) => {
+export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, isLoading, onClick, onUpdate, isEditable }) => {
   const { component, title, description, props } = config;
 
   const handleTitleSave = (newTitle: string) => {
@@ -46,10 +48,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, on
     onUpdate({ ...config, description: newDescription });
   };
 
+  if (isLoading) {
+    return <Skeleton className="h-full w-full" />;
+  }
+
   const renderWidgetContent = () => {
     switch (component) {
       case 'MetricCard':
-        const metricValue = data.dashboardMetrics ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] : props.value;
+        const metricValue = data.dashboardMetrics ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] : "N/A";
         const IconComponent = props.icon ? LucideIcons[props.icon as keyof typeof LucideIcons] : undefined;
         return (
           <div onClick={onClick} className="cursor-pointer">
