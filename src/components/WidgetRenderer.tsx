@@ -7,6 +7,7 @@ import { ImageWidget } from './widgets/ImageWidget';
 import { ProgressWidget } from './widgets/ProgressWidget';
 import { AnnouncementWidget } from './widgets/AnnouncementWidget';
 import { StatsWidget } from './widgets/StatsWidget';
+import { SecurityUpdatesWidget } from './widgets/SecurityUpdatesWidget';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -63,6 +64,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
         return <AnnouncementWidget title={title} description={description} />;
       case 'StatsWidget':
         return <StatsWidget title={title} description={description} />;
+      case 'SecurityUpdatesWidget':
+        return <SecurityUpdatesWidget />;
       default:
         return (
           <Alert variant="destructive">
