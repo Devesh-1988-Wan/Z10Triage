@@ -9,13 +9,13 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
-import { Link, useNavigate } from 'react-router-dom';
-import { AdminForms } from '@/components/AdminForms';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 export const Dashboard: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { dashboardId } = useParams<{ dashboardId: string }>();
   const {
     dashboardLayout,
     bugReports,
@@ -26,7 +26,7 @@ export const Dashboard: React.FC = () => {
     isLoading: isDataLoading,
     error,
     refetch,
-  } = useDashboardData();
+  } = useDashboardData(dashboardId);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSavingDefault, setIsSavingDefault] = useState(false);
@@ -58,6 +58,7 @@ export const Dashboard: React.FC = () => {
         .from('dashboard_layout')
         .select('id')
         .eq('user_id', user.id)
+        .eq('id', dashboardId)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: no rows found
@@ -129,7 +130,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Z10 Updates - August 13, 2025
+              Z10 Updates - August 14, 2025
             </h1>
             <p className="text-muted-foreground">
               Development progress, bug tracking, and customer support overview
@@ -137,7 +138,7 @@ export const Dashboard: React.FC = () => {
           </div>
           {isAdmin && (
             <Button asChild variant="outline">
-              <Link to="/dashboard/editor">
+              <Link to={`/dashboard/editor/${dashboardId}`}>
                 <Settings className="w-4 h-4 mr-2" />
                 Customize Dashboard
               </Link>
@@ -178,7 +179,7 @@ export const Dashboard: React.FC = () => {
                   </p>
                   <div className="flex justify-center gap-4 pt-4">
                     <Button asChild>
-                      <Link to="/dashboard/editor">
+                      <Link to={`/dashboard/editor/${dashboardId}`}>
                         <Plus className="w-4 h-4 mr-2" />
                         Start with a Blank Canvas
                       </Link>
@@ -198,29 +199,6 @@ export const Dashboard: React.FC = () => {
                   No widgets have been configured for this dashboard. Please contact an administrator.
                 </p>
               )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Admin Forms - Only show for admins */}
-        {isAdmin && (
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Data Management
-              </CardTitle>
-              <CardDescription>
-                Create and manage bug reports, customer support tickets, and development tasks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminForms
-                onDataUpdate={refetch}
-                bugReports={bugReports}
-                customerTickets={customerTickets}
-                developmentTickets={developmentTickets}
-                widgetContent={widgetContent}
-              />
             </CardContent>
           </Card>
         )}
