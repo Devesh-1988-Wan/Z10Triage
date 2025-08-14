@@ -12,19 +12,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket } from '@/types/dashboard';
+import { WidgetContent } from '@/types/widgetContent';
+import { ContentManager } from '@/components/ContentManager';
 
 interface AdminFormsProps {
   onDataUpdate: () => void;
   bugReports: BugReport[];
   customerTickets: CustomerSupportTicket[];
   developmentTickets: DevelopmentTicket[];
+  widgetContent: WidgetContent[];
 }
 
 export const AdminForms: React.FC<AdminFormsProps> = ({ 
   onDataUpdate, 
   bugReports, 
   customerTickets, 
-  developmentTickets 
+  developmentTickets,
+  widgetContent 
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -225,10 +229,11 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs value={activeForm} onValueChange={setActiveForm}>
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="bug">Bug Reports</TabsTrigger>
             <TabsTrigger value="support">Customer Support</TabsTrigger>
             <TabsTrigger value="dev">Development</TabsTrigger>
+            <TabsTrigger value="content">Content & Media</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bug" className="mt-6">
@@ -539,6 +544,10 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
                 Create Development Ticket
               </Button>
             </form>
+          </TabsContent>
+
+          <TabsContent value="content" className="mt-6">
+            <ContentManager onContentUpdate={onDataUpdate} widgetContent={widgetContent} />
           </TabsContent>
         </Tabs>
       </CardContent>

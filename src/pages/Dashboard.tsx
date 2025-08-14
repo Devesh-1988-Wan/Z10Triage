@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, Settings, Plus, LayoutTemplate } from 'lucide-react';
+import { Loader2, AlertCircle, Settings, Plus, LayoutTemplate, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData, DEFAULT_DASHBOARD_LAYOUT } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -22,6 +22,7 @@ export const Dashboard: React.FC = () => {
     customerTickets,
     developmentTickets,
     dashboardMetrics,
+    widgetContent,
     isLoading: isDataLoading,
     error,
     refetch,
@@ -159,6 +160,7 @@ export const Dashboard: React.FC = () => {
                     customerTickets,
                     developmentTickets,
                     dashboardMetrics,
+                    widgetContent,
                   }}
                 />
               </div>
@@ -217,6 +219,7 @@ export const Dashboard: React.FC = () => {
                 bugReports={bugReports}
                 customerTickets={customerTickets}
                 developmentTickets={developmentTickets}
+                widgetContent={widgetContent}
               />
             </CardContent>
           </Card>

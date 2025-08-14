@@ -3,7 +3,12 @@ import { MetricCard } from './MetricCard';
 import { BugChart } from './BugChart';
 import { CustomerSupportTable } from './CustomerSupportTable';
 import { DevelopmentPipeline } from './DevelopmentPipeline';
+import { ImageWidget } from './widgets/ImageWidget';
+import { ProgressWidget } from './widgets/ProgressWidget';
+import { AnnouncementWidget } from './widgets/AnnouncementWidget';
+import { StatsWidget } from './widgets/StatsWidget';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
+import { WidgetContent } from '@/types/widgetContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -19,6 +24,7 @@ interface WidgetRendererProps {
     customerTickets: CustomerSupportTicket[];
     developmentTickets: DevelopmentTicket[];
     dashboardMetrics: DashboardMetrics | null;
+    widgetContent: WidgetContent[];
   };
 }
 
@@ -49,6 +55,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
         return <CustomerSupportTable customerTickets={data.customerTickets} />;
       case 'DevelopmentPipeline':
         return <DevelopmentPipeline developmentTickets={data.developmentTickets} />;
+      case 'ImageWidget':
+        return <ImageWidget title={title} description={description} content={data.widgetContent} />;
+      case 'ProgressWidget':
+        return <ProgressWidget title={title} description={description} />;
+      case 'AnnouncementWidget':
+        return <AnnouncementWidget title={title} description={description} />;
+      case 'StatsWidget':
+        return <StatsWidget title={title} description={description} />;
       default:
         return (
           <Alert variant="destructive">
