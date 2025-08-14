@@ -2,7 +2,7 @@
 import React from 'react';
 import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
 import { WidgetConfig } from '@/types/dashboard';
-import { WidgetRenderer } from './WidgetRenderer';
+import { WidgetRenderer } from '../WidgetRenderer';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
