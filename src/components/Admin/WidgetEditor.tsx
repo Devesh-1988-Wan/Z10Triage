@@ -1,3 +1,5 @@
+// src/components/Admin/WidgetEditor.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,15 +91,14 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
 
     try {
       // Check if a layout already exists for the user
-      const { data: existingLayout, error: fetchError } = await supabase
+      const { data: existingLayouts, error: fetchError } = await supabase
         .from('dashboard_layout')
         .select('id')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
+
+      const existingLayout = existingLayouts && existingLayouts.length > 0 ? existingLayouts[0] : null;
 
       if (existingLayout) {
         // Update existing layout
