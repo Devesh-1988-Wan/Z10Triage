@@ -51,7 +51,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleLoadDefaultLayout = async () => {
-    if (!user) return;
+    if (!user || !dashboardId) return;
     setIsSavingDefault(true);
     try {
       const { data: existingLayout, error: fetchError } = await supabase
@@ -64,17 +64,23 @@ export const Dashboard: React.FC = () => {
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: no rows found
         throw fetchError;
       }
+      
+      const payload = {
+        layout: DEFAULT_DASHBOARD_LAYOUT,
+        dashboard_name: "Default Dashboard",
+        dashboard_description: "This is the default system dashboard."
+      };
 
       if (existingLayout) {
         const { error: updateError } = await supabase
           .from('dashboard_layout')
-          .update({ layout: DEFAULT_DASHBOARD_LAYOUT })
+          .update(payload)
           .eq('id', existingLayout.id);
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await supabase
           .from('dashboard_layout')
-          .insert({ user_id: user.id, layout: DEFAULT_DASHBOARD_LAYOUT, is_default: false });
+          .insert({ ...payload, user_id: user.id, is_default: false });
         if (insertError) throw insertError;
       }
 
@@ -130,10 +136,10 @@ export const Dashboard: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Z10 Updates - August 14, 2025
+              {dashboardLayout?.name || 'Dashboard'}
             </h1>
             <p className="text-muted-foreground">
-              Development progress, bug tracking, and customer support overview
+              {dashboardLayout?.description || 'Development progress, bug tracking, and customer support overview'}
             </p>
           </div>
           {isAdmin && (
