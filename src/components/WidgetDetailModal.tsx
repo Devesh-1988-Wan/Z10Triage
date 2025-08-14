@@ -1,3 +1,4 @@
+// src/components/WidgetDetailModal.tsx
 import React from 'react';
 import {
   Dialog,
