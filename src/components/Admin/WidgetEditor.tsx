@@ -27,6 +27,7 @@ const AVAILABLE_WIDGET_TYPES = [
   { value: 'ProgressWidget', label: 'Progress Tracker', defaultProps: {} },
   { value: 'AnnouncementWidget', label: 'Announcements', defaultProps: {} },
   { value: 'StatsWidget', label: 'Analytics Dashboard', defaultProps: {} },
+  { value: 'SecurityUpdatesWidget', label: 'Security & Infra Updates', defaultProps: {} },
 ];
 
 // Map string icon names to LucideReact components for display in the editor
