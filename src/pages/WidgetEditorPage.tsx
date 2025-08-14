@@ -1,5 +1,3 @@
-// src/pages/WidgetEditorPage.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
@@ -17,6 +15,7 @@ export const WidgetEditorPage: React.FC = () => {
     bugReports,
     customerTickets,
     developmentTickets,
+    dashboardMetrics,
     widgetContent,
     isLoading,
     error,
@@ -34,7 +33,6 @@ export const WidgetEditorPage: React.FC = () => {
   }, [dashboardLayout]);
 
   const handleExportPdf = () => {
-    // PDF export is handled on the main dashboard page
     alert("Please go to the main dashboard page to export to PDF.");
   };
 
@@ -95,6 +93,7 @@ export const WidgetEditorPage: React.FC = () => {
             customerTickets={customerTickets}
             developmentTickets={developmentTickets}
             widgetContent={widgetContent}
+            dashboardMetrics={dashboardMetrics}
           />
         </div>
       </div>
