@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,6 +13,8 @@ import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { WidgetEditorPage } from "./pages/WidgetEditorPage";
 import NotFound from "./pages/NotFound";
+import { PublicDashboard } from "./pages/PublicDashboard";
+import { DashboardHub } from './pages/DashboardHub';
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -33,14 +37,20 @@ const App: React.FC = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
+                  <DashboardHub />
+                </ProtectedRoute>
+              } />
+               <Route path="/dashboard/:dashboardId" element={
+                <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
-              <Route path="/dashboard/editor" element={
+              <Route path="/dashboard/editor/:dashboardId" element={
                 <ProtectedRoute requiredRole="admin">
                   <WidgetEditorPage />
                 </ProtectedRoute>
               } />
+              <Route path="/public/dashboard/:shareKey" element={<PublicDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
