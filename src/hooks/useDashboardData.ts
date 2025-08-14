@@ -1,12 +1,9 @@
-// src/hooks/useDashboardData.ts
-
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get user ID
+import { useAuth } from '@/contexts/AuthContext';
 
-// Default dashboard layout if no custom layout is found
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   widgets: [
     {
@@ -148,7 +145,7 @@ export const useDashboardData = (dashboardId?: string) => {
             widgets: layoutJson.widgets || []
         };
       } else if (dashboardId === 'new') {
-        currentLayout = { name: 'New Dashboard', description: '', widgets: [] }; // Start with a blank layout for a new dashboard
+        currentLayout = { name: 'New Dashboard', description: '', widgets: [] };
       } else if (!layoutData && dashboardId) {
         setError("Dashboard not found.");
         setIsLoading(false);
@@ -195,6 +192,7 @@ export const useDashboardData = (dashboardId?: string) => {
       if (metricsRes.data.length > 0) {
         const metrics = metricsRes.data[0];
         setDashboardMetrics({
+          id: metrics.id,
           totalBugsFixed: metrics.total_bugs_fixed,
           totalTicketsResolved: metrics.total_tickets_resolved,
           blockerBugs: metrics.blocker_bugs,
