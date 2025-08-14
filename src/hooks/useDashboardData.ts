@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+// src/hooks/useDashboardData.ts
+
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
@@ -13,6 +15,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Bugs Fixed This Week',
       description: 'Marked as Dev Done',
       props: {
+        valueKey: 'totalBugsFixed',
         icon: 'Bug',
         change: { value: '+18%', trend: 'up' },
       },
@@ -24,6 +27,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Total Tickets Resolved',
       description: 'Including Tasks/Stories/Bugs',
       props: {
+        valueKey: 'totalTicketsResolved',
         icon: 'TrendingUp',
         change: { value: '+12%', trend: 'up' },
       },
@@ -35,6 +39,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Blocker Bugs',
       description: 'Highest priority issues',
       props: {
+        valueKey: 'blockerBugs',
         icon: 'Shield',
         priority: 'blocker',
       },
@@ -46,6 +51,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Critical Bugs',
       description: 'Requires immediate attention',
       props: {
+        valueKey: 'criticalBugs',
         icon: 'Bug',
         priority: 'critical',
       },
@@ -57,6 +63,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'High Priority Bugs',
       description: 'Important but not critical',
       props: {
+        valueKey: 'highPriorityBugs',
         icon: 'Clock',
         priority: 'high',
       },
@@ -68,6 +75,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Active Customer Support',
       description: 'Live & WIP tickets',
       props: {
+        valueKey: 'activeCustomerSupport',
         icon: 'Users',
       },
       layout: { x: 5, y: 0, w: 1, h: 1 },
@@ -96,59 +104,11 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       props: {},
       layout: { x: 0, y: 5, w: 6, h: 2 },
     },
-    {
-      id: 'metric-functional-stability',
-      component: 'MetricCard',
-      title: 'Functional Stability',
-      
-      description: 'Webstore, DAM, Tenant issues',
-      props: {
-        icon: 'Zap',
-        change: { value: '+2%', trend: 'up' },
-      },
-      layout: { x: 0, y: 7, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-performance',
-      component: 'MetricCard',
-      title: 'Performance',
-      
-      description: 'Cart checkout slowness',
-      props: {
-        icon: 'TrendingUp',
-        priority: 'critical',
-      },
-      layout: { x: 1, y: 7, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-queries',
-      component: 'MetricCard',
-      title: 'Queries',
-      
-      description: 'Checkout & font issues',
-      props: {
-        icon: 'Bug',
-        priority: 'medium',
-      },
-      layout: { x: 2, y: 7, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-look-feel',
-      component: 'MetricCard',
-      title: 'Look & Feel',
-      
-      description: 'UI & display issues',
-      props: {
-        icon: 'Shield',
-        priority: 'low',
-      },
-      layout: { x: 3, y: 7, w: 1, h: 1 },
-    },
   ],
 };
 
 
-export const useDashboardData = () => {
+export const useDashboardData = (dashboardId?: string) => {
   const { user, isInitialized } = useAuth();
   const [bugReports, setBugReports] = useState<BugReport[]>([]);
   const [customerTickets, setCustomerTickets] = useState<CustomerSupportTicket[]>([]);
@@ -160,43 +120,32 @@ export const useDashboardData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       let currentLayout: DashboardLayout | null = null;
-      let userLayoutFound = false;
+      let layoutQuery = supabase.from('dashboard_layout').select('layout');
 
-      if (user?.id) {
-        const { data: userLayout, error: userLayoutError } = await supabase
-          .from('dashboard_layout')
-          .select('layout')
-          .eq('user_id', user.id)
-          .limit(1);
-
-        if (userLayout && userLayout.length > 0) {
-          currentLayout = userLayout[0].layout as unknown as DashboardLayout;
-          userLayoutFound = true;
-        }
+      if (dashboardId && dashboardId !== 'new') {
+        layoutQuery = layoutQuery.eq('id', dashboardId);
+      } else if (user?.id) {
+        layoutQuery = layoutQuery.eq('user_id', user.id);
+      } else {
+        layoutQuery = layoutQuery.eq('is_default', true);
       }
 
-      if (!userLayoutFound) {
-        const { data: defaultLayout, error: defaultLayoutError } = await supabase
-          .from('dashboard_layout')
-          .select('layout')
-          .eq('is_default', true)
-          .limit(1);
+      const { data: layoutData, error: layoutError } = await layoutQuery.limit(1).single();
 
-        if (defaultLayout && defaultLayout.length > 0) {
-          currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
-        } else {
-          // If no user-specific and no default layout in DB, we'll return an empty layout.
-          // The Dashboard component will handle showing the options to the admin.
-          currentLayout = { widgets: [] };
-        }
-      }
+      if (layoutError && layoutError.code !== 'PGRST116') throw layoutError;
       
+      if (layoutData) {
+        currentLayout = layoutData.layout as unknown as DashboardLayout;
+      } else if (dashboardId === 'new' || !layoutData) {
+        currentLayout = DEFAULT_DASHBOARD_LAYOUT;
+      }
+
       setDashboardLayout(currentLayout);
 
       const [
@@ -222,70 +171,11 @@ export const useDashboardData = () => {
       if (metricsRes.error) throw metricsRes.error;
       if (widgetContentRes.error) throw widgetContentRes.error;
 
-      setBugReports(bugReportsRes.data.map(bug => ({
-        id: bug.id,
-        title: bug.title,
-        description: bug.description,
-        priority: bug.priority as 'blocker' | 'critical' | 'high' | 'medium' | 'low',
-        status: bug.status as 'open' | 'in_progress' | 'dev_done' | 'closed',
-        category: bug.category as 'functional' | 'usability' | 'performance' | 'security' | 'other',
-        assignee: bug.assignee,
-        reporter: bug.reporter,
-        createdAt: new Date(bug.created_at),
-        updatedAt: new Date(bug.updated_at)
-      })));
-
-      setCustomerTickets(customerTicketsRes.data.map(ticket => ({
-        id: ticket.id,
-        customerName: ticket.customer_name,
-        area: ticket.area,
-        priority: ticket.priority as 'blocker' | 'critical' | 'high' | 'medium' | 'low',
-        status: ticket.status as 'live' | 'wip' | 'pending' | 'closed',
-        eta: ticket.eta,
-        description: ticket.description,
-        assignee: ticket.assignee,
-        createdAt: new Date(ticket.created_at),
-        updatedAt: new Date(ticket.updated_at)
-      })));
-
-      setDevelopmentTickets(developmentTicketsRes.data.map(ticket => ({
-        id: ticket.id,
-        title: ticket.title,
-        type: ticket.type as 'feature' | 'bug' | 'enhancement' | 'task',
-        requestedBy: ticket.requested_by,
-        ticketId: ticket.ticket_id,
-        status: ticket.status as 'not_started' | 'dev_inprogress' | 'code_review' | 'testing' | 'completed',
-        priority: ticket.priority as 'blocker' | 'critical' | 'high' | 'medium' | 'low',
-        estimatedHours: ticket.estimated_hours,
-        actualHours: ticket.actual_hours,
-        assignee: ticket.assignee,
-        createdAt: new Date(ticket.created_at),
-        updatedAt: new Date(ticket.updated_at)
-      })));
-
-      setSecurityFixes(securityFixesRes.data.map(fix => ({
-        id: fix.id,
-        title: fix.title,
-        severity: fix.severity as 'critical' | 'high' | 'medium' | 'low',
-        status: fix.status as 'identified' | 'in_progress' | 'testing' | 'deployed',
-        affectedSystems: fix.affected_systems,
-        fixDescription: fix.fix_description,
-        estimatedCompletion: fix.estimated_completion ? new Date(fix.estimated_completion) : undefined,
-        createdAt: new Date(fix.created_at),
-        updatedAt: new Date(fix.updated_at)
-      })));
-
-      setWidgetContent(widgetContentRes.data.map(content => ({
-        id: content.id,
-        title: content.title,
-        description: content.description,
-        content: content.content,
-        imageUrl: content.image_url,
-        widgetType: content.widget_type as 'content' | 'image' | 'announcement' | 'progress' | 'stats',
-        metadata: content.metadata || {},
-        createdAt: new Date(content.created_at),
-        updatedAt: new Date(content.updated_at)
-      })));
+      setBugReports(bugReportsRes.data.map(bug => ({ ...bug, createdAt: new Date(bug.created_at), updatedAt: new Date(bug.updated_at) } as BugReport)));
+      setCustomerTickets(customerTicketsRes.data.map(ticket => ({ ...ticket, customerName: ticket.customer_name, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as CustomerSupportTicket)));
+      setDevelopmentTickets(developmentTicketsRes.data.map(ticket => ({ ...ticket, requestedBy: ticket.requested_by, ticketId: ticket.ticket_id, estimatedHours: ticket.estimated_hours, actualHours: ticket.actual_hours, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as DevelopmentTicket)));
+      setSecurityFixes(securityFixesRes.data.map(fix => ({ ...fix, affectedSystems: fix.affected_systems, fixDescription: fix.fix_description, estimatedCompletion: fix.estimated_completion ? new Date(fix.estimated_completion) : undefined, createdAt: new Date(fix.created_at), updatedAt: new Date(fix.updated_at) } as SecurityFix)));
+      setWidgetContent(widgetContentRes.data.map(content => ({ ...content, imageUrl: content.image_url, widgetType: content.widget_type, createdAt: new Date(content.created_at), updatedAt: new Date(content.updated_at) } as WidgetContent)));
 
       if (metricsRes.data.length > 0) {
         const metrics = metricsRes.data[0];
@@ -304,14 +194,13 @@ export const useDashboardData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id, dashboardId]);
 
   useEffect(() => {
-    // Only fetch data when user is loaded and auth is initialized
-    if (isInitialized && user !== undefined) {
+    if (isInitialized) {
       fetchData();
     }
-  }, [user?.id, isInitialized]); // Only depend on user.id and isInitialized
+  }, [isInitialized, fetchData]);
 
   return {
     dashboardLayout,
