@@ -1,8 +1,8 @@
 // src/pages/WidgetEditorPage.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { WidgetEditor } from '@/components/Admin/WidgetEditor';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,16 @@ export const WidgetEditorPage: React.FC = () => {
     refetch
   } = useDashboardData(dashboardId);
 
+  const [dashboardName, setDashboardName] = useState('');
+  const [dashboardDescription, setDashboardDescription] = useState('');
+
+  useEffect(() => {
+    if (dashboardLayout) {
+      setDashboardName(dashboardLayout.name || '');
+      setDashboardDescription(dashboardLayout.description || '');
+    }
+  }, [dashboardLayout]);
+
   const handleExportPdf = () => {
     // PDF export is handled on the main dashboard page
     alert("Please go to the main dashboard page to export to PDF.");
@@ -30,17 +40,17 @@ export const WidgetEditorPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout onExportPdf={handleExportPdf}>
+      <DashboardLayoutComponent onExportPdf={handleExportPdf}>
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
-      </DashboardLayout>
+      </DashboardLayoutComponent>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout onExportPdf={handleExportPdf}>
+      <DashboardLayoutComponent onExportPdf={handleExportPdf}>
         <div className="flex items-center justify-center min-h-[400px]">
           <Alert variant="destructive" className="w-full max-w-md">
             <AlertCircle className="h-4 w-4" />
@@ -52,12 +62,12 @@ export const WidgetEditorPage: React.FC = () => {
             </AlertDescription>
           </Alert>
         </div>
-      </DashboardLayout>
+      </DashboardLayoutComponent>
     );
   }
 
   return (
-    <DashboardLayout onExportPdf={handleExportPdf}>
+    <DashboardLayoutComponent onExportPdf={handleExportPdf}>
       <div className="space-y-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -73,6 +83,10 @@ export const WidgetEditorPage: React.FC = () => {
         <WidgetEditor
           currentLayout={dashboardLayout}
           onLayoutSave={refetch}
+          dashboardName={dashboardName}
+          onDashboardNameChange={setDashboardName}
+          dashboardDescription={dashboardDescription}
+          onDashboardDescriptionChange={setDashboardDescription}
         />
         <div className="mt-8">
           <AdminForms
@@ -84,6 +98,6 @@ export const WidgetEditorPage: React.FC = () => {
           />
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayoutComponent>
   );
 };
