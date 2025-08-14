@@ -6,7 +6,7 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, ArrowLeft, Save } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { DashboardGrid } from '@/components/DashboardGrid';
+import { DashboardGrid } from '@/components/widgets/DashboardGrid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Layout } from 'react-grid-layout';
