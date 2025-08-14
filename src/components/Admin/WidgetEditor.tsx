@@ -28,6 +28,7 @@ const AVAILABLE_WIDGET_TYPES = [
   { value: 'AnnouncementWidget', label: 'Announcements', defaultProps: {} },
   { value: 'StatsWidget', label: 'Analytics Dashboard', defaultProps: {} },
   { value: 'SecurityUpdatesWidget', label: 'Security & Infra Updates', defaultProps: {} },
+  { value: 'SalesChart', label: 'Sales Chart', defaultProps: {} },
 ];
 
 // Map string icon names to LucideReact components for display in the editor
@@ -66,10 +67,10 @@ interface WidgetEditorProps {
   onDashboardDescriptionChange?: (description: string) => void;
 }
 
-export const WidgetEditor: React.FC<WidgetEditorProps> = ({ 
-  currentLayout, 
-  onLayoutSave, 
-  dashboardName, 
+export const WidgetEditor: React.FC<WidgetEditorProps> = ({
+  currentLayout,
+  onLayoutSave,
+  dashboardName,
   onDashboardNameChange,
   dashboardDescription,
   onDashboardDescriptionChange
@@ -119,7 +120,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
               .insert(payload)
               .select('id')
               .single();
-            
+
             if (error) throw error;
 
             toast({ title: "Success", description: "Dashboard created successfully!" });
@@ -252,7 +253,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
 
   const handleSelectChange = (id: string, value: string) => {
     const stateSetter = editingWidget ? setEditingWidget : setNewWidgetForm;
-    
+
     stateSetter(prev => {
         const newFormState = { ...prev! };
         if (id === 'component') {
