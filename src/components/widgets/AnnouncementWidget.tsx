@@ -16,33 +16,6 @@ interface AnnouncementWidgetProps {
   }[];
 }
 
-const defaultAnnouncements = [
-  {
-    id: '1',
-    title: 'System Maintenance Scheduled',
-    content: 'Planned maintenance window on Aug 25th, 2-4 AM EST. Expected downtime: 2 hours.',
-    type: 'warning' as const,
-    date: '2024-08-20',
-    author: 'DevOps Team'
-  },
-  {
-    id: '2',
-    title: 'Security Update Completed',
-    content: 'All customer-reported vulnerabilities have been addressed and deployed.',
-    type: 'success' as const,
-    date: '2024-08-18',
-    author: 'Security Team'
-  },
-  {
-    id: '3',
-    title: 'New Feature Release',
-    content: 'Commerce Connector 2.0 features are now available for beta testing.',
-    type: 'info' as const,
-    date: '2024-08-15',
-    author: 'Product Team'
-  }
-];
-
 const typeIcons = {
   info: Info,
   warning: AlertTriangle,
@@ -60,7 +33,7 @@ const typeColors = {
 export const AnnouncementWidget: React.FC<AnnouncementWidgetProps> = ({ 
   title = "Announcements", 
   description = "Important updates and notifications",
-  announcements = defaultAnnouncements 
+  announcements = [] 
 }) => {
   return (
     <Card className="shadow-card">
