@@ -95,6 +95,8 @@ export type Database = {
       dashboard_layout: {
         Row: {
           created_at: string
+          dashboard_description: string | null
+          dashboard_name: string
           id: string
           is_default: boolean
           layout: Json
@@ -103,6 +105,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dashboard_description?: string | null
+          dashboard_name?: string
           id?: string
           is_default?: boolean
           layout: Json
@@ -111,6 +115,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dashboard_description?: string | null
+          dashboard_name?: string
           id?: string
           is_default?: boolean
           layout?: Json
