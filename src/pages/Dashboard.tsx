@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { DashboardGrid } from '@/components/DashboardGrid';
+import { DashboardGrid } from '@/components/widgets/DashboardGrid';
 import { WidgetConfig } from '@/types/dashboard';
 import { WidgetDetailModal } from '@/components/WidgetDetailModal';
 import { GlobalFilters } from '@/components/GlobalFilters';
