@@ -1,8 +1,11 @@
+// src/hooks/useDashboardData.ts
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
 import { useAuth } from '@/contexts/AuthContext';
+import { DateRange } from 'react-day-picker';
+import { subDays } from 'date-fns';
 
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   widgets: [
@@ -16,7 +19,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
         icon: 'Bug',
         change: { value: '+18%', trend: 'up' },
       },
-      layout: { x: 0, y: 0, w: 1, h: 1 },
+      layout: { x: 0, y: 0, w: 1, h: 1, i: 'metric-bugs-fixed' },
     },
     {
       id: 'metric-tickets-resolved',
@@ -28,54 +31,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
         icon: 'TrendingUp',
         change: { value: '+12%', trend: 'up' },
       },
-      layout: { x: 1, y: 0, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-blocker-bugs',
-      component: 'MetricCard',
-      title: 'Blocker Bugs',
-      description: 'Highest priority issues',
-      props: {
-        valueKey: 'blockerBugs',
-        icon: 'Shield',
-        priority: 'blocker',
-      },
-      layout: { x: 2, y: 0, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-critical-bugs',
-      component: 'MetricCard',
-      title: 'Critical Bugs',
-      description: 'Requires immediate attention',
-      props: {
-        valueKey: 'criticalBugs',
-        icon: 'Bug',
-        priority: 'critical',
-      },
-      layout: { x: 3, y: 0, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-high-priority-bugs',
-      component: 'MetricCard',
-      title: 'High Priority Bugs',
-      description: 'Important but not critical',
-      props: {
-        valueKey: 'highPriorityBugs',
-        icon: 'Clock',
-        priority: 'high',
-      },
-      layout: { x: 4, y: 0, w: 1, h: 1 },
-    },
-    {
-      id: 'metric-active-customer-support',
-      component: 'MetricCard',
-      title: 'Active Customer Support',
-      description: 'Live & WIP tickets',
-      props: {
-        valueKey: 'activeCustomerSupport',
-        icon: 'Users',
-      },
-      layout: { x: 5, y: 0, w: 1, h: 1 },
+      layout: { x: 1, y: 0, w: 1, h: 1, i: 'metric-tickets-resolved' },
     },
     {
       id: 'bug-chart',
@@ -83,27 +39,10 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Bug Priority Distribution',
       description: 'Current open bugs by priority level',
       props: {},
-      layout: { x: 0, y: 1, w: 3, h: 2 },
-    },
-    {
-      id: 'customer-support-table',
-      component: 'CustomerSupportTable',
-      title: 'Customer Support - In Progress',
-      description: 'Active customer support tickets and their status',
-      props: {},
-      layout: { x: 0, y: 3, w: 6, h: 2 },
-    },
-    {
-      id: 'development-pipeline',
-      component: 'DevelopmentPipeline',
-      title: 'Development Pipeline - August Priorities',
-      description: '38 tickets currently in development pipeline',
-      props: {},
-      layout: { x: 0, y: 5, w: 6, h: 2 },
+      layout: { x: 0, y: 1, w: 3, h: 2, i: 'bug-chart' },
     },
   ],
 };
-
 
 export const useDashboardData = (dashboardId?: string) => {
   const { user, isInitialized } = useAuth();
@@ -116,6 +55,10 @@ export const useDashboardData = (dashboardId?: string) => {
   const [widgetContent, setWidgetContent] = useState<WidgetContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 20),
+    to: new Date(),
+  });
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -142,7 +85,7 @@ export const useDashboardData = (dashboardId?: string) => {
         currentLayout = {
             name: layoutData.dashboard_name || 'My Dashboard',
             description: layoutData.dashboard_description || '',
-            widgets: layoutJson.widgets || []
+            widgets: (layoutJson.widgets || []).map(w => ({...w, layout: {...w.layout, i: w.id}}))
         };
       } else if (dashboardId === 'new') {
         currentLayout = { name: 'New Dashboard', description: '', widgets: [] };
@@ -160,6 +103,9 @@ export const useDashboardData = (dashboardId?: string) => {
 
       setDashboardLayout(currentLayout);
 
+      const fromDate = dateRange?.from?.toISOString();
+      const toDate = dateRange?.to?.toISOString();
+
       const [
         bugReportsRes,
         customerTicketsRes,
@@ -168,10 +114,10 @@ export const useDashboardData = (dashboardId?: string) => {
         metricsRes,
         widgetContentRes
       ] = await Promise.all([
-        supabase.from('bug_reports').select('*').order('created_at', { ascending: false }),
-        supabase.from('customer_support_tickets').select('*').order('created_at', { ascending: false }),
-        supabase.from('development_tickets').select('*').order('created_at', { ascending: false }),
-        supabase.from('security_fixes').select('*').order('created_at', { ascending: false }),
+        supabase.from('bug_reports').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+        supabase.from('customer_support_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+        supabase.from('development_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+        supabase.from('security_fixes').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
         supabase.from('dashboard_metrics').select('*').order('created_at', { ascending: false }).limit(1),
         supabase.from('widget_content').select('*').order('created_at', { ascending: false })
       ]);
@@ -207,7 +153,7 @@ export const useDashboardData = (dashboardId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, dashboardId]);
+  }, [user?.id, dashboardId, dateRange]);
 
   useEffect(() => {
     if (isInitialized) {
@@ -217,6 +163,7 @@ export const useDashboardData = (dashboardId?: string) => {
 
   return {
     dashboardLayout,
+    setDashboardLayout,
     bugReports,
     customerTickets,
     developmentTickets,
@@ -225,6 +172,8 @@ export const useDashboardData = (dashboardId?: string) => {
     widgetContent,
     isLoading,
     error,
-    refetch: fetchData
+    refetch: fetchData,
+    dateRange,
+    setDateRange,
   };
 };
