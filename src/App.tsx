@@ -1,5 +1,4 @@
 // src/App.tsx
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -16,7 +15,6 @@ import NotFound from "./pages/NotFound";
 import { PublicDashboard } from "./pages/PublicDashboard";
 import { DashboardHub } from './pages/DashboardHub';
 
-// Create QueryClient with proper configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
