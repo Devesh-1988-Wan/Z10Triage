@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Loader2 } from 'lucide-react';
-import { DashboardProvider } from '@/stores/dashboardStore'; // Import the provider
+import { DashboardProvider } from '@/stores/dashboardStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,7 +42,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <DashboardProvider> {/* Wrap the application with the DashboardProvider */}
+          <DashboardProvider>
             <BrowserRouter>
               <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
                 <Routes>
