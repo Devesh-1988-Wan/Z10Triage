@@ -1,4 +1,4 @@
-import React, from 'react';
+import React from 'react';
 import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
 import { WidgetLibrary, WidgetTemplate } from './WidgetLibrary';
 import { MultiSelectControls } from './MultiSelectControls';
@@ -90,20 +90,34 @@ export const EnhancedDashboardBuilder: React.FC = () => {
   const handleSaveLayout = async () => {
     if (!dashboardLayout) return;
     try {
-      const { error } = await supabase
-        .from('dashboard_layout')
-        .update({ 
-          layout: { widgets: dashboardLayout.widgets },
-          dashboard_name: dashboardLayout.name,
-          dashboard_description: dashboardLayout.description
-        })
-        .eq('id', dashboardId);
+        const payload = {
+            layout: { widgets: dashboardLayout.widgets },
+            dashboard_name: dashboardLayout.name,
+            dashboard_description: dashboardLayout.description,
+        };
 
-      if (error) throw error;
-      toast({ title: "Layout Saved", description: "Your dashboard layout has been updated." });
-      refetch();
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to save layout.", variant: "destructive" });
+        if (dashboardId === 'new') {
+            const { data, error } = await supabase
+              .from('dashboard_layout')
+              .insert({ ...payload, user_id: (await supabase.auth.getUser()).data.user?.id })
+              .select('id')
+              .single();
+
+            if (error) throw error;
+            toast({ title: "Layout Saved", description: "Your new dashboard has been created." });
+            navigate(`/dashboard/editor/${data.id}`, { replace: true });
+        } else {
+            const { error } = await supabase
+              .from('dashboard_layout')
+              .update(payload)
+              .eq('id', dashboardId);
+
+            if (error) throw error;
+            toast({ title: "Layout Saved", description: "Your dashboard layout has been updated." });
+        }
+        refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: `Failed to save layout: ${err.message}`, variant: "destructive" });
     }
   };
 
@@ -121,7 +135,7 @@ export const EnhancedDashboardBuilder: React.FC = () => {
         <h1 className="text-3xl font-bold">Dashboard Editor</h1>
         <div className="flex items-center space-x-2">
           <Button asChild variant="outline">
-            <Link to={`/dashboard/${dashboardId}`}><ArrowLeft className="w-4 h-4 mr-2" />Back to Dashboard</Link>
+            <Link to={dashboardId === 'new' ? '/dashboard' : `/dashboard/${dashboardId}`}><ArrowLeft className="w-4 h-4 mr-2" />Back</Link>
           </Button>
           <Button onClick={handleSaveLayout}>
             <Save className="w-4 h-4 mr-2" />
@@ -129,8 +143,8 @@ export const EnhancedDashboardBuilder: React.FC = () => {
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-12 gap-6 h-full">
-        <div className="col-span-3 space-y-4">
+      <div className="grid grid-cols-12 gap-6 h-[calc(100vh-150px)]">
+        <div className="col-span-3 space-y-4 h-full overflow-y-auto">
           <Tabs defaultValue="widgets" className="h-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="widgets">Library</TabsTrigger>
@@ -183,12 +197,13 @@ export const EnhancedDashboardBuilder: React.FC = () => {
         </div>
         
         <div className="col-span-9">
-          <div className="h-full border-2 border-dashed border-border rounded-lg p-4">
+          <div className="h-full border-2 border-dashed border-border rounded-lg p-4 overflow-y-auto">
             {dashboardLayout && (
               <DashboardGrid
                 layout={dashboardLayout.widgets}
                 onLayoutChange={handleLayoutChange}
                 isDraggable={true}
+                isResizable={true}
                 data={data}
                 isLoading={isLoading}
                 onWidgetClick={(widget) => setBuilderState(prev => ({...prev, selectedWidgets: [widget.id]}))}
