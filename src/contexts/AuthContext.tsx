@@ -20,12 +20,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Debug log to monitor state changes from outside the useEffect
-  console.log('[AuthProvider State]', { isLoading, isInitialized, user });
-
   useEffect(() => {
-    const fetchAndSetUserProfile = async (supabaseUser: SupabaseUser) => {
-      console.log('[Auth] Fetching profile for user:', supabaseUser.id);
+    const fetchAndSetUserProfile = async (supabaseUser: SupabaseUser | null) => {
+      if (!supabaseUser) {
+        setUser(null);
+        setIsLoading(false);
+        if (!isInitialized) setIsInitialized(true);
+        return;
+      }
+
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -33,14 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', supabaseUser.id)
           .single();
 
-        // This is the most important log for debugging the blank page issue
-        console.log('[Auth] Profile fetch result:', { profile, error });
-
-        if (error) {
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is not a fatal error
           console.error('Error fetching user profile:', error);
           setUser(null);
         } else if (profile) {
-          console.log('[Auth] Profile found, setting user state.');
           setUser({
             id: profile.user_id,
             email: profile.email,
@@ -48,54 +47,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: profile.name,
           });
         } else {
-            console.warn('[Auth] Profile not found for user:', supabaseUser.id);
-            setUser(null); // Explicitly set user to null if no profile found
+          // This case handles a logged-in user that doesn't have a profile yet.
+          // You might want to redirect them to a profile creation page.
+          console.warn('User is logged in but has no profile.');
+          setUser(null);
         }
       } catch (err) {
         console.error('Unhandled error in fetchAndSetUserProfile:', err);
         setUser(null);
+      } finally {
+        setIsLoading(false);
+        if (!isInitialized) setIsInitialized(true);
       }
     };
-
-    const handleUserSession = async (session: Session | null) => {
-      console.log('[Auth] Handling user session:', session ? 'Session exists' : 'No session');
-      if (session?.user) {
-        await fetchAndSetUserProfile(session.user);
-      } else {
-        setUser(null);
-      }
-      if (!isInitialized) {
-        console.log('[Auth] Initializing app.');
-        setIsInitialized(true);
-      }
-      console.log('[Auth] Setting isLoading to false.');
-      setIsLoading(false);
-    };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleUserSession(session);
-    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`[Auth] onAuthStateChange event: ${event}`);
-      if (['SIGNED_IN', 'SIGNED_OUT'].includes(event)) {
-        setIsLoading(true);
-        await handleUserSession(session);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        await fetchAndSetUserProfile(session.user);
-      }
+      setIsLoading(true);
+      await fetchAndSetUserProfile(session?.user ?? null);
     });
+
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        fetchAndSetUserProfile(session?.user ?? null);
+    });
+
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isInitialized]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setIsLoading(false); // Turn off loading on error
-    return { success: !error, error: error?.message };
+    if (error) {
+        setIsLoading(false);
+        return { success: false, error: error.message };
+    }
+    return { success: true };
   };
 
   const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
@@ -106,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: { emailRedirectTo: redirectUrl, data: { name } },
     });
-    if (error) setIsLoading(false);
+    setIsLoading(false);
     return { success: !error, error: error?.message };
   };
 
@@ -115,8 +104,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error logging out:', error);
-      setIsLoading(false);
     }
+    setUser(null);
+    setIsLoading(false);
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
