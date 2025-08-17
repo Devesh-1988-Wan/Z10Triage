@@ -180,7 +180,7 @@ export const DashboardHub: React.FC = () => {
   };
   
   return (
-    <DashboardLayoutComponent onExportPdf={() => {}}>
+    <DashboardLayoutComponent title="Dashboard Hub" onExportPdf={() => {}}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">My Dashboards</h1>
