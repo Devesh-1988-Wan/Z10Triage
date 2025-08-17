@@ -1,169 +1,132 @@
-import React, { useState, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useDashboardData } from '@/hooks/useDashboardData';
-import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { DashboardGrid } from '@/components/widgets/DashboardGrid';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Edit, Play, StopCircle, Maximize, Calendar as CalendarIcon, ChevronsUpDown } from 'lucide-react';
-import { DateRangePicker } from '@/components/DateRangePicker';
-import { WidgetDetailModal } from '@/components/WidgetDetailModal';
-import { WidgetConfig } from '@/types/dashboard';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation, Pagination } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { Settings, Edit, Plus, Share2 } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { AdminForms } from '@/components/AdminForms';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Layout } from 'react-grid-layout';
 
-export const Dashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const { dashboardId } = useParams<{ dashboardId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   const {
     dashboardLayout,
     setDashboardLayout,
+    bugReports,
+    customerTickets,
+    developmentTickets,
+    dashboardMetrics,
+    widgetContent,
     isLoading,
     error,
     refetch,
     dateRange,
     setDateRange,
-    ...data
   } = useDashboardData(dashboardId);
 
-  const [presentationMode, setPresentationMode] = useState<'slideshow' | 'default'>('default');
-  const [selectedWidget, setSelectedWidget] = useState<WidgetConfig | null>(null);
-
-  const handleUpdateWidget = (updatedWidget: WidgetConfig) => {
+  const [isEditable, setIsEditable] = useState(false);
+  
+  const handleLayoutChange = (newLayout: Layout[]) => {
     if (dashboardLayout) {
-      const updatedWidgets = dashboardLayout.widgets.map(w => w.id === updatedWidget.id ? updatedWidget : w);
+      const updatedWidgets = dashboardLayout.widgets.map(widget => {
+        const layoutItem = newLayout.find(l => l.i === widget.id);
+        return layoutItem ? { ...widget, layout: { ...widget.layout, ...layoutItem } } : widget;
+      });
       setDashboardLayout({ ...dashboardLayout, widgets: updatedWidgets });
     }
   };
 
-  const dashboardName = useMemo(() => dashboardLayout?.name || 'Dashboard', [dashboardLayout]);
-  const dashboardDescription = useMemo(() => dashboardLayout?.description, [dashboardLayout]);
+  const handleSaveLayout = async () => {
+    if (!dashboardLayout) return;
+    try {
+        const { error } = await supabase
+            .from('dashboard_layout')
+            .update({ layout: { widgets: dashboardLayout.widgets } })
+            .eq('id', dashboardId);
+        if (error) throw error;
+        toast({ title: "Success", description: "Dashboard layout saved successfully" });
+        setIsEditable(false);
+    } catch (err) {
+        toast({ title: "Error", description: "Failed to save layout", variant: "destructive" });
+    }
+  };
 
   if (isLoading) {
-    return (
-      <DashboardLayoutComponent onExportPdf={() => {}}>
-        <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-9 w-1/4" />
-            <Skeleton className="h-10 w-48" />
-          </div>
-          <Skeleton className="h-6 w-1/2" />
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-64 w-full col-span-2" />
-            <Skeleton className="h-64 w-full col-span-2" />
-          </div>
-        </div>
-      </DashboardLayoutComponent>
-    );
+    return <div>Loading dashboard...</div>;
   }
 
   if (error) {
-    return (
-       <DashboardLayoutComponent onExportPdf={() => {}}>
-        <div className="container mx-auto p-6">
-          <Alert variant="destructive">
-            <Terminal className="h-4 w-4" />
-            <AlertTitle>Error Loading Dashboard</AlertTitle>
-            <AlertDescription>
-              <p>{error}</p>
-              <Button onClick={() => navigate('/dashboard')} variant="link" className="p-0 h-auto mt-2">Go to Dashboard Hub</Button>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </DashboardLayoutComponent>
-    );
+    return <div className="text-destructive text-center p-4">{error}</div>;
   }
+  
+  const canEdit = user?.role === 'admin' || user?.role === 'super_admin';
 
   return (
-    <DashboardLayoutComponent onExportPdf={() => console.log('Exporting PDF...')}>
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-        <div>
-          <h1 className="text-3xl font-bold">{dashboardName}</h1>
-          {dashboardDescription && <p className="text-muted-foreground">{dashboardDescription}</p>}
-        </div>
+    <DashboardLayout 
+      title={dashboardLayout?.name || 'Dashboard'}
+      description={dashboardLayout?.description}
+      onExportPdf={() => { /* Implement PDF export */ }}
+    >
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center space-x-2">
-          <DateRangePicker dateRange={dateRange} onDateChange={setDateRange} />
-          {presentationMode === 'default' ? (
-            <Button variant="outline" onClick={() => setPresentationMode('slideshow')}>
-              <Play className="w-4 h-4 mr-2" />
-              Slideshow
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setPresentationMode('default')}>
-              <StopCircle className="w-4 h-4 mr-2" />
-              Stop
-            </Button>
+          {canEdit && (
+            <>
+              <Button variant="outline" onClick={() => navigate('/dashboard/editor/new')}>
+                <Plus className="w-4 h-4 mr-2" /> New
+              </Button>
+              <Button variant="outline" onClick={() => navigate(`/dashboard/editor/${dashboardId}`)}>
+                <Edit className="w-4 h-4 mr-2" /> Edit
+              </Button>
+            </>
           )}
-          <Button asChild>
-            <Link to={`/dashboard/editor/${dashboardId}`}>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Dashboard
-            </Link>
+          <Button variant="outline">
+            <Share2 className="w-4 h-4 mr-2" /> Share
           </Button>
         </div>
-      </div>
-      
-      {presentationMode === 'slideshow' ? (
-        <Swiper
-          modules={[Autoplay, Navigation, Pagination]}
-          spaceBetween={50}
-          slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
-          className="h-[calc(100vh-200px)]"
-        >
-          {dashboardLayout?.widgets.map(widget => (
-            <SwiperSlide key={widget.id} className="p-10">
-               <div className="h-full w-full">
-                <DashboardGrid
-                  layout={[widget]}
-                  onLayoutChange={() => {}}
-                  isDraggable={false}
-                  isResizable={false}
-                  data={data}
-                  isLoading={isLoading}
-                  onWidgetClick={() => {}}
-                  onUpdateWidget={handleUpdateWidget}
-                  isPresentationMode
-                />
-               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      ) : (
-        dashboardLayout && (
-          <DashboardGrid
-            layout={dashboardLayout.widgets}
-            onLayoutChange={() => {}} // Layout changes are handled in the editor
-            isDraggable={false}
-            isResizable={false}
-            data={data}
-            isLoading={isLoading}
-            onWidgetClick={(widget) => setSelectedWidget(widget)}
-            onUpdateWidget={handleUpdateWidget}
+        <div className="flex items-center space-x-2">
+          <DatePickerWithRange
+            date={dateRange}
+            onDateChange={(range) => setDateRange(range)}
           />
-        )
-      )}
+          <Button variant="outline" size="icon">
+            <Settings className="w-4 h-4" />
+          </Button>
+          {isEditable && (
+            <Button onClick={handleSaveLayout}>Save Layout</Button>
+          )}
+        </div>
+      </div>
 
-      {selectedWidget && (
-        <WidgetDetailModal
-          widget={selectedWidget}
-          data={data}
+      {canEdit && <AdminForms 
+        onDataUpdate={refetch}
+        bugReports={bugReports}
+        customerTickets={customerTickets}
+        developmentTickets={developmentTickets}
+        widgetContent={widgetContent}
+        dashboardMetrics={dashboardMetrics}
+      />}
+      
+      {dashboardLayout && (
+        <DashboardGrid
+          layout={dashboardLayout.widgets}
+          onLayoutChange={handleLayoutChange}
+          isEditable={isEditable}
+          data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }}
           isLoading={isLoading}
-          isOpen={!!selectedWidget}
-          onClose={() => setSelectedWidget(null)}
         />
       )}
-    </DashboardLayoutComponent>
+    </DashboardLayout>
   );
 };
+
+export default Dashboard;
