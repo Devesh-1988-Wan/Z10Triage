@@ -24,8 +24,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface DashboardRecord {
   id: string;
   dashboard_name: string;
-  dashboard_description: string;
-  updated_at: string;
+  dashboard_description: string | null;
+  updated_at: string | null;
 }
 
 export const DashboardHub: React.FC = () => {
@@ -45,10 +45,10 @@ export const DashboardHub: React.FC = () => {
     if (error) {
       throw new Error(error.message);
     }
-    return data;
+    return data ?? [];
   };
 
-  const { data: dashboards, isLoading, error } = useQuery<DashboardRecord[], Error>({
+  const { data: dashboards = [], isLoading, error } = useQuery<DashboardRecord[], Error>({
     queryKey: ['dashboards', user?.id],
     queryFn: fetchDashboards,
     enabled: !!user,
@@ -66,7 +66,7 @@ export const DashboardHub: React.FC = () => {
         description: "The dashboard has been successfully removed.",
       });
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       toast({
         title: "Error Deleting Dashboard",
         description: err.message,
@@ -89,9 +89,12 @@ export const DashboardHub: React.FC = () => {
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-full mt-2" />
               </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-2/3" />
+              </CardContent>
               <CardFooter className="flex justify-between">
-                 <Skeleton className="h-4 w-1/2" />
-                 <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-10 w-24" />
               </CardFooter>
             </Card>
           ))}
@@ -109,18 +112,22 @@ export const DashboardHub: React.FC = () => {
       );
     }
     
-    if (dashboards && dashboards.length > 0) {
+    if (dashboards.length > 0) {
       return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {dashboards.map((dashboard) => (
             <Card key={dashboard.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle>{dashboard.dashboard_name}</CardTitle>
-                <CardDescription className="line-clamp-2">{dashboard.dashboard_description || "No description provided."}</CardDescription>
+                <CardDescription className="line-clamp-2">
+                  {dashboard.dashboard_description || "No description provided."}
+                </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
                  <p className="text-sm text-muted-foreground">
-                    Last updated: {new Date(dashboard.updated_at).toLocaleDateString()}
+                    Last updated: {dashboard.updated_at
+                      ? new Date(dashboard.updated_at).toLocaleDateString()
+                      : "Unknown"}
                  </p>
               </CardContent>
               <CardFooter className="flex justify-between items-center">
@@ -142,7 +149,9 @@ export const DashboardHub: React.FC = () => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteDashboardMutation.mutate(dashboard.id)}>
+                      <AlertDialogAction
+                        onClick={() => deleteDashboardMutation.mutate(dashboard.id)}
+                      >
                         Delete
                       </AlertDialogAction>
                     </AlertDialogFooter>
