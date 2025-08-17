@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -274,6 +274,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      shared_dashboards: {
+        Row: {
+          created_at: string
+          dashboard_id: string | null
+          id: string
+          is_public: boolean
+          public_url_key: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id?: string | null
+          id?: string
+          is_public?: boolean
+          public_url_key: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string | null
+          id?: string
+          is_public?: boolean
+          public_url_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_dashboards_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "dashboard_layout"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       widget_content: {
         Row: {

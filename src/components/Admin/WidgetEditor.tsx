@@ -87,7 +87,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
     title: '',
     description: '',
     props: {},
-    layout: { x: 0, y: 0, w: 1, h: 1 },
+    layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
   });
 
   useEffect(() => {
@@ -151,7 +151,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: newWidgetForm.title || 'New Widget',
       description: newWidgetForm.description,
       props: newWidgetForm.props || {},
-      layout: newWidgetForm.layout || { x: 0, y: 0, w: 1, h: 1 },
+      layout: { ...newWidgetForm.layout, i: uuidv4() } as { x: number; y: number; w: number; h: number; i: string },
     };
     setLayoutToEdit(prev => ({
       ...prev,
@@ -162,7 +162,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: '',
       description: '',
       props: {},
-      layout: { x: 0, y: 0, w: 1, h: 1 },
+      layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
     });
     setIsDialogOpen(false); // Close dialog after adding
   };
@@ -203,7 +203,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: '',
       description: '',
       props: AVAILABLE_WIDGET_TYPES.find(w => w.value === 'MetricCard')?.defaultProps || {},
-      layout: { x: 0, y: 0, w: 1, h: 1 },
+      layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
     });
     setIsDialogOpen(true);
   };

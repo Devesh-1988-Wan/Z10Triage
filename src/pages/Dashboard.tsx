@@ -150,7 +150,14 @@ export const Dashboard: React.FC = () => {
           {dashboardLayout?.widgets.map((widgetConfig) => (
             <SwiperSlide key={widgetConfig.id}>
               <div className="p-4 h-[70vh] flex items-center justify-center">
-                <WidgetRenderer config={widgetConfig} data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }} isEditable={false} onUpdate={() => {}} onClick={() => {}} />
+                <WidgetRenderer 
+                  config={widgetConfig} 
+                  data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }} 
+                  isLoading={false}
+                  isEditable={false} 
+                  onUpdate={() => {}} 
+                  onClick={() => {}} 
+                />
               </div>
             </SwiperSlide>
           ))}
@@ -165,6 +172,7 @@ export const Dashboard: React.FC = () => {
           onLayoutChange={handleLayoutChange}
           isDraggable={false}
           data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }}
+          isLoading={false}
           onWidgetClick={setSelectedWidget}
           onUpdateWidget={handleUpdateWidget}
         />
