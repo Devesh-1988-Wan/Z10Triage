@@ -1,15 +1,5 @@
 // src/components/WidgetRenderer.tsx
-import React from 'react';
-import { MetricCard } from './MetricCard';
-import { BugChart } from './BugChart';
-import { CustomerSupportTable } from './CustomerSupportTable';
-import { DevelopmentPipeline } from './DevelopmentPipeline';
-import { ImageWidget } from './widgets/ImageWidget';
-import { ProgressWidget } from './widgets/ProgressWidget';
-import { AnnouncementWidget } from './widgets/AnnouncementWidget';
-import { StatsWidget } from './widgets/StatsWidget';
-import { SecurityUpdatesWidget } from './widgets/SecurityUpdatesWidget';
-import { SalesChart } from './widgets/SalesChart';
+import React, { lazy, Suspense } from 'react';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,17 +7,28 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { EditableText } from './EditableText';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BarChartWidget } from './widgets/charts/BarChart';
-import { LineChartWidget } from './widgets/charts/LineChart';
-import { PieChartWidget } from './widgets/charts/PieChart';
-import { HeatmapWidget } from './widgets/charts/Heatmap';
-import { TextWidget } from './widgets/content/TextWidget';
-import { CounterWidget } from './widgets/CounterWidget';
-
+import { Bug, TrendingUp, Users, Clock, Shield, Zap } from 'lucide-react';
 
 // Map string icon names to LucideReact components
-import { Bug, TrendingUp, Users, Clock, Shield, Zap } from 'lucide-react';
 const LucideIcons = { Bug, TrendingUp, Users, Clock, Shield, Zap };
+
+// Lazy-loaded widget components
+const MetricCard = lazy(() => import('./MetricCard').then(module => ({ default: module.MetricCard })));
+const BugChart = lazy(() => import('./BugChart').then(module => ({ default: module.BugChart })));
+const CustomerSupportTable = lazy(() => import('./CustomerSupportTable').then(module => ({ default: module.CustomerSupportTable })));
+const DevelopmentPipeline = lazy(() => import('./DevelopmentPipeline').then(module => ({ default: module.DevelopmentPipeline })));
+const ImageWidget = lazy(() => import('./widgets/ImageWidget').then(module => ({ default: module.ImageWidget })));
+const ProgressWidget = lazy(() => import('./widgets/ProgressWidget').then(module => ({ default: module.ProgressWidget })));
+const AnnouncementWidget = lazy(() => import('./widgets/AnnouncementWidget').then(module => ({ default: module.AnnouncementWidget })));
+const StatsWidget = lazy(() => import('./widgets/StatsWidget').then(module => ({ default: module.StatsWidget })));
+const SecurityUpdatesWidget = lazy(() => import('./widgets/SecurityUpdatesWidget').then(module => ({ default: module.SecurityUpdatesWidget })));
+const SalesChart = lazy(() => import('./widgets/SalesChart').then(module => ({ default: module.SalesChart })));
+const BarChartWidget = lazy(() => import('./widgets/charts/BarChart').then(module => ({ default: module.BarChartWidget })));
+const LineChartWidget = lazy(() => import('./widgets/charts/LineChart').then(module => ({ default: module.LineChartWidget })));
+const PieChartWidget = lazy(() => import('./widgets/charts/PieChart').then(module => ({ default: module.PieChartWidget })));
+const HeatmapWidget = lazy(() => import('./widgets/charts/Heatmap').then(module => ({ default: module.HeatmapWidget })));
+const TextWidget = lazy(() => import('./widgets/content/TextWidget').then(module => ({ default: module.TextWidget })));
+const CounterWidget = lazy(() => import('./widgets/CounterWidget').then(module => ({ default: module.CounterWidget })));
 
 interface WidgetRendererProps {
   config: WidgetConfig;
@@ -60,6 +61,22 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, is
   }
 
   const renderWidgetContent = () => {
+    const widgetProps = {
+      // Common props for many widgets
+      title,
+      description,
+      ...props,
+      // Data props
+      data: data,
+      bugReports: data.bugReports,
+      customerTickets: data.customerTickets,
+      developmentTickets: data.developmentTickets,
+      dashboardMetrics: data.dashboardMetrics,
+      widgetContent: data.widgetContent,
+      // Chart-specific data props
+      config: props.chartConfig,
+    };
+
     switch (component) {
       case 'MetricCard':
         const metricValue = data.dashboardMetrics ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] : "N/A";
@@ -77,35 +94,35 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, is
           </div>
         );
       case 'BugChart':
-        return <div onClick={onClick} className="cursor-pointer h-full"><BugChart bugReports={data.bugReports} /></div>;
+        return <div onClick={onClick} className="cursor-pointer h-full"><BugChart {...widgetProps} /></div>;
       case 'CustomerSupportTable':
-        return <div onClick={onClick} className="cursor-pointer"><CustomerSupportTable customerTickets={data.customerTickets} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><CustomerSupportTable {...widgetProps} /></div>;
       case 'DevelopmentPipeline':
-        return <div onClick={onClick} className="cursor-pointer"><DevelopmentPipeline developmentTickets={data.developmentTickets} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><DevelopmentPipeline {...widgetProps} /></div>;
       case 'ImageWidget':
-        return <div onClick={onClick} className="cursor-pointer"><ImageWidget title={title} description={description} content={data.widgetContent} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><ImageWidget {...widgetProps} /></div>;
       case 'ProgressWidget':
-        return <div onClick={onClick} className="cursor-pointer"><ProgressWidget title={title} description={description} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><ProgressWidget {...widgetProps} /></div>;
       case 'AnnouncementWidget':
-        return <div onClick={onClick} className="cursor-pointer"><AnnouncementWidget title={title} description={description} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><AnnouncementWidget {...widgetProps} /></div>;
       case 'StatsWidget':
-        return <div onClick={onClick} className="cursor-pointer"><StatsWidget title={title} description={description} /></div>;
+        return <div onClick={onClick} className="cursor-pointer"><StatsWidget {...widgetProps} /></div>;
       case 'SecurityUpdatesWidget':
         return <div onClick={onClick} className="cursor-pointer"><SecurityUpdatesWidget /></div>;
       case 'SalesChart':
         return <SalesChart />;
       case 'BarChart':
-        return <BarChartWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+        return <BarChartWidget {...widgetProps} />;
       case 'LineChart':
-        return <LineChartWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+        return <LineChartWidget {...widgetProps} />;
       case 'PieChart':
-        return <PieChartWidget title={title} description={description} data={data.customerTickets} config={props.chartConfig} />;
+        return <PieChartWidget {...widgetProps} />;
       case 'Heatmap':
-        return <HeatmapWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+        return <HeatmapWidget {...widgetProps} />;
       case 'TextWidget':
-        return <TextWidget title={title} description={description} content={props.content} allowRichText={props.allowRichText} />;
+        return <TextWidget {...widgetProps} />;
       case 'CounterWidget':
-        return <CounterWidget title={title} value={props.valueKey} />;
+        return <CounterWidget {...widgetProps} />;
       default:
         return (
           <Alert variant="destructive">
@@ -118,7 +135,11 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, is
   };
 
   if (component === 'MetricCard') {
-    return renderWidgetContent();
+    return (
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+            {renderWidgetContent()}
+        </Suspense>
+    );
   }
 
   return (
@@ -134,7 +155,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, is
         )}
       </CardHeader>
       <CardContent className="flex-grow">
-        {renderWidgetContent()}
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+          {renderWidgetContent()}
+        </Suspense>
       </CardContent>
     </Card>
   );
