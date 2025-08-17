@@ -6,12 +6,12 @@ import { SidebarComponent as Sidebar } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
   description?: string;
   onExportPdf?: () => void;
 }
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, description, onExportPdf }) => {
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title = "Dashboard", description, onExportPdf }) => {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
