@@ -1,6 +1,8 @@
+// src/components/DashboardLayout.tsx
+
 import React from 'react';
 import { Header } from '@/components/Header';
-import { Sidebar } from '@/components/ui/sidebar';
+import { SidebarComponent as Sidebar } from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
