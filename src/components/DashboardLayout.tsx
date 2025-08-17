@@ -1,12 +1,12 @@
 import React from 'react';
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
+import { Header } from '@/components/Header';
+import { Sidebar } from '@/components/Sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
   description?: string;
-  onExportPdf?: () => void; // Changed to optional
+  onExportPdf?: () => void;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, description, onExportPdf }) => {
