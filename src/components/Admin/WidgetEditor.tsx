@@ -222,7 +222,17 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
           ...prev!,
           layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
         }));
-      } else {
+      } else if (id.startsWith('props.')) {
+        const propKey = id.split('.')[1];
+        setEditingWidget(prev => ({
+          ...prev!,
+          props: {
+            ...prev!.props,
+            [propKey]: value
+          },
+        }));
+      }
+      else {
         setEditingWidget(prev => ({ ...prev!, [id]: value }));
       }
     } else {
