@@ -1,4 +1,3 @@
-// src/stores/dashboardStore.ts
 import create from 'zustand';
 import { createContext, useContext } from 'react';
 import { WidgetConfig, DashboardLayout } from '@/types/dashboard';
