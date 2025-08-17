@@ -5,11 +5,16 @@ import { Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics, WidgetContent } from '@/types/dashboard';
 
+// Data Forms
 import { BugReportForm } from './forms/BugReportForm';
 import { CustomerSupportForm } from './forms/CustomerSupportForm';
 import { DevelopmentTicketForm } from './forms/DevelopmentTicketForm';
 import { DashboardMetricsForm } from './forms/DashboardMetricsForm';
 import { ContentManager } from './ContentManager';
+
+// Admin Forms
+import { AddUserForm } from './forms/AddUserForm';
+import { CreateDashboardForm } from './forms/CreateDashboardForm';
 
 interface AdminFormsProps {
   onDataUpdate: () => void;
@@ -22,19 +27,11 @@ interface AdminFormsProps {
 
 export const AdminForms: React.FC<AdminFormsProps> = ({ 
   onDataUpdate, 
-  bugReports, 
-  customerTickets, 
-  developmentTickets,
   widgetContent,
   dashboardMetrics
 }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(dashboardMetrics);
-
-  useEffect(() => {
-    setMetrics(dashboardMetrics);
-  }, [dashboardMetrics]);
   
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
@@ -55,34 +52,32 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          Data Management
+          Data & Admin Management
         </CardTitle>
         <CardDescription>
-          Create and manage bug reports, customer support tickets, and development tasks
+          Manage data, users, and dashboards from one place.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="all">All Forms</TabsTrigger>
-            <TabsTrigger value="bug">Bug Reports</TabsTrigger>
-            <TabsTrigger value="support">Customer Support</TabsTrigger>
-            <TabsTrigger value="dev">Development</TabsTrigger>
+          <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="bug">Bugs</TabsTrigger>
+            <TabsTrigger value="support">Support</TabsTrigger>
+            <TabsTrigger value="dev">Dev</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
-            <TabsTrigger value="content">Content & Media</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="admin">Admin</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6 space-y-8">
             <BugReportForm onDataUpdate={onDataUpdate} />
             <CustomerSupportForm onDataUpdate={onDataUpdate} />
             <DevelopmentTicketForm onDataUpdate={onDataUpdate} />
-            {metrics && (
-              <DashboardMetricsForm 
-                initialMetrics={metrics} 
-                onDataUpdate={onDataUpdate} 
-              />
-            )}
+            {dashboardMetrics && <DashboardMetricsForm initialMetrics={dashboardMetrics} onDataUpdate={onDataUpdate} />}
             <ContentManager onContentUpdate={onDataUpdate} widgetContent={widgetContent} />
+            <AddUserForm />
+            <CreateDashboardForm onDashboardCreated={onDataUpdate} />
           </TabsContent>
 
           <TabsContent value="bug" className="mt-6">
@@ -98,16 +93,16 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
           </TabsContent>
 
           <TabsContent value="metrics" className="mt-6">
-            {metrics && (
-              <DashboardMetricsForm 
-                initialMetrics={metrics} 
-                onDataUpdate={onDataUpdate} 
-              />
-            )}
+            {dashboardMetrics && <DashboardMetricsForm initialMetrics={dashboardMetrics} onDataUpdate={onDataUpdate} />}
           </TabsContent>
 
           <TabsContent value="content" className="mt-6">
             <ContentManager onContentUpdate={onDataUpdate} widgetContent={widgetContent} />
+          </TabsContent>
+
+          <TabsContent value="admin" className="mt-6 space-y-8">
+            <AddUserForm />
+            <CreateDashboardForm onDashboardCreated={onDataUpdate} />
           </TabsContent>
         </Tabs>
       </CardContent>
