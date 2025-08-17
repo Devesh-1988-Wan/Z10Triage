@@ -1,11 +1,12 @@
 // src/hooks/useDashboardData.ts
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { WidgetContent } from '@/types/widgetContent';
 import { useAuth } from '@/contexts/AuthContext';
 import { DateRange } from 'react-day-picker';
 import { subDays } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   widgets: [
@@ -46,26 +47,17 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
 
 export const useDashboardData = (dashboardId?: string) => {
   const { user, isInitialized } = useAuth();
-  const [bugReports, setBugReports] = useState<BugReport[]>([]);
-  const [customerTickets, setCustomerTickets] = useState<CustomerSupportTicket[]>([]);
-  const [developmentTickets, setDevelopmentTickets] = useState<DevelopmentTicket[]>([]);
-  const [securityFixes, setSecurityFixes] = useState<SecurityFix[]>([]);
-  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   const [dashboardLayout, setDashboardLayout] = useState<DashboardLayout | null>(null);
-  const [widgetContent, setWidgetContent] = useState<WidgetContent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 20),
     to: new Date(),
   });
 
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    let currentLayout: DashboardLayout | null = null;
+    let layoutError: Error | null = null;
 
     try {
-      let currentLayout: DashboardLayout | null = null;
       let layoutQuery = supabase.from('dashboard_layout').select('layout, dashboard_name, dashboard_description');
 
       if (dashboardId && dashboardId !== 'new') {
@@ -76,9 +68,9 @@ export const useDashboardData = (dashboardId?: string) => {
         layoutQuery = layoutQuery.eq('is_default', true);
       }
 
-      const { data: layoutData, error: layoutError } = await layoutQuery.limit(1).single();
+      const { data: layoutData, error } = await layoutQuery.limit(1).single();
 
-      if (layoutError && layoutError.code !== 'PGRST116') throw layoutError;
+      if (error && error.code !== 'PGRST116') throw error;
       
       if (layoutData) {
         const layoutJson = layoutData.layout as unknown as { widgets: WidgetConfig[] };
@@ -90,89 +82,86 @@ export const useDashboardData = (dashboardId?: string) => {
       } else if (dashboardId === 'new') {
         currentLayout = { name: 'New Dashboard', description: '', widgets: [] };
       } else if (!layoutData && dashboardId) {
-        setError("Dashboard not found.");
-        setIsLoading(false);
-        return;
+        layoutError = new Error("Dashboard not found.");
       } else {
         currentLayout = {
           name: 'Default Dashboard',
           description: 'This is the default system dashboard.',
           ...DEFAULT_DASHBOARD_LAYOUT
-      };
-      }
-
-      setDashboardLayout(currentLayout);
-
-      const fromDate = dateRange?.from?.toISOString();
-      const toDate = dateRange?.to?.toISOString();
-
-      const [
-        bugReportsRes,
-        customerTicketsRes,
-        developmentTicketsRes,
-        securityFixesRes,
-        metricsRes,
-        widgetContentRes
-      ] = await Promise.all([
-        supabase.from('bug_reports').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
-        supabase.from('customer_support_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
-        supabase.from('development_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
-        supabase.from('security_fixes').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
-        supabase.from('dashboard_metrics').select('*').order('created_at', { ascending: false }).limit(1),
-        supabase.from('widget_content').select('*').order('created_at', { ascending: false })
-      ]);
-
-      if (bugReportsRes.error) throw bugReportsRes.error;
-      if (customerTicketsRes.error) throw customerTicketsRes.error;
-      if (developmentTicketsRes.error) throw developmentTicketsRes.error;
-      if (securityFixesRes.error) throw securityFixesRes.error;
-      if (metricsRes.error) throw metricsRes.error;
-      if (widgetContentRes.error) throw widgetContentRes.error;
-
-      setBugReports(bugReportsRes.data.map(bug => ({ ...bug, createdAt: new Date(bug.created_at), updatedAt: new Date(bug.updated_at) } as BugReport)));
-      setCustomerTickets(customerTicketsRes.data.map(ticket => ({ ...ticket, customerName: ticket.customer_name, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as CustomerSupportTicket)));
-      setDevelopmentTickets(developmentTicketsRes.data.map(ticket => ({ ...ticket, requestedBy: ticket.requested_by, ticketId: ticket.ticket_id, estimatedHours: ticket.estimated_hours, actualHours: ticket.actual_hours, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as DevelopmentTicket)));
-      setSecurityFixes(securityFixesRes.data.map(fix => ({ ...fix, affectedSystems: fix.affected_systems, fixDescription: fix.fix_description, estimatedCompletion: fix.estimated_completion ? new Date(fix.estimated_completion) : undefined, createdAt: new Date(fix.created_at), updatedAt: new Date(fix.updated_at) } as SecurityFix)));
-      setWidgetContent(widgetContentRes.data.map(content => ({ ...content, imageUrl: content.image_url, widgetType: content.widget_type, createdAt: new Date(content.created_at), updatedAt: new Date(content.updated_at) } as WidgetContent)));
-
-      if (metricsRes.data.length > 0) {
-        const metrics = metricsRes.data[0];
-        setDashboardMetrics({
-          id: metrics.id,
-          totalBugsFixed: metrics.total_bugs_fixed,
-          totalTicketsResolved: metrics.total_tickets_resolved,
-          blockerBugs: metrics.blocker_bugs,
-          criticalBugs: metrics.critical_bugs,
-          highPriorityBugs: metrics.high_priority_bugs,
-          activeCustomerSupport: metrics.active_customer_support,
-          developmentProgress: metrics.development_progress
-        });
+        };
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-    } finally {
-      setIsLoading(false);
+      layoutError = err instanceof Error ? err : new Error('Failed to fetch layout');
     }
-  }, [user?.id, dashboardId, dateRange]);
+    
+    setDashboardLayout(currentLayout);
+    if(layoutError) throw layoutError;
 
-  useEffect(() => {
-    if (isInitialized) {
-      fetchData();
-    }
-  }, [isInitialized, fetchData]);
+    const fromDate = dateRange?.from?.toISOString();
+    const toDate = dateRange?.to?.toISOString();
+
+    const [
+      bugReportsRes,
+      customerTicketsRes,
+      developmentTicketsRes,
+      securityFixesRes,
+      metricsRes,
+      widgetContentRes
+    ] = await Promise.all([
+      supabase.from('bug_reports').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+      supabase.from('customer_support_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+      supabase.from('development_tickets').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+      supabase.from('security_fixes').select('*').gte('created_at', fromDate).lte('created_at', toDate).order('created_at', { ascending: false }),
+      supabase.from('dashboard_metrics').select('*').order('created_at', { ascending: false }).limit(1),
+      supabase.from('widget_content').select('*').order('created_at', { ascending: false })
+    ]);
+
+    if (bugReportsRes.error) throw bugReportsRes.error;
+    if (customerTicketsRes.error) throw customerTicketsRes.error;
+    if (developmentTicketsRes.error) throw developmentTicketsRes.error;
+    if (securityFixesRes.error) throw securityFixesRes.error;
+    if (metricsRes.error) throw metricsRes.error;
+    if (widgetContentRes.error) throw widgetContentRes.error;
+    
+    const dashboardMetrics = metricsRes.data.length > 0 ? {
+        id: metricsRes.data[0].id,
+        totalBugsFixed: metricsRes.data[0].total_bugs_fixed,
+        totalTicketsResolved: metricsRes.data[0].total_tickets_resolved,
+        blockerBugs: metricsRes.data[0].blocker_bugs,
+        criticalBugs: metricsRes.data[0].critical_bugs,
+        highPriorityBugs: metricsRes.data[0].high_priority_bugs,
+        activeCustomerSupport: metricsRes.data[0].active_customer_support,
+        developmentProgress: metricsRes.data[0].development_progress
+      } : null;
+
+    return {
+      bugReports: bugReportsRes.data.map(bug => ({ ...bug, createdAt: new Date(bug.created_at), updatedAt: new Date(bug.updated_at) } as BugReport)),
+      customerTickets: customerTicketsRes.data.map(ticket => ({ ...ticket, customerName: ticket.customer_name, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as CustomerSupportTicket)),
+      developmentTickets: developmentTicketsRes.data.map(ticket => ({ ...ticket, requestedBy: ticket.requested_by, ticketId: ticket.ticket_id, estimatedHours: ticket.estimated_hours, actualHours: ticket.actual_hours, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) } as DevelopmentTicket)),
+      securityFixes: securityFixesRes.data.map(fix => ({ ...fix, affectedSystems: fix.affected_systems, fixDescription: fix.fix_description, estimatedCompletion: fix.estimated_completion ? new Date(fix.estimated_completion) : undefined, createdAt: new Date(fix.created_at), updatedAt: new Date(fix.updated_at) } as SecurityFix)),
+      widgetContent: widgetContentRes.data.map(content => ({ ...content, imageUrl: content.image_url, widgetType: content.widget_type, createdAt: new Date(content.created_at), updatedAt: new Date(content.updated_at) } as WidgetContent)),
+      dashboardMetrics,
+    };
+  }, [user?.id, dashboardId, dateRange]);
+  
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['dashboardData', user?.id, dashboardId, dateRange],
+    queryFn: fetchData,
+    enabled: isInitialized,
+  });
 
   return {
     dashboardLayout,
     setDashboardLayout,
-    bugReports,
-    customerTickets,
-    developmentTickets,
-    securityFixes,
-    dashboardMetrics,
-    widgetContent,
+    bugReports: data?.bugReports || [],
+    customerTickets: data?.customerTickets || [],
+    developmentTickets: data?.developmentTickets || [],
+    securityFixes: data?.securityFixes || [],
+    dashboardMetrics: data?.dashboardMetrics || null,
+    widgetContent: data?.widgetContent || [],
     isLoading,
-    error,
-    refetch: fetchData,
+    error: error?.message || null,
+    refetch,
     dateRange,
     setDateRange,
   };
