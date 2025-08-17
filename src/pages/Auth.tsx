@@ -1,3 +1,5 @@
+// src/pages/Auth.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +8,7 @@ import { LoginForm } from '@/components/LoginForm';
 import { ResetPasswordForm } from '@/components/ResetPasswordForm';
 import { SignupForm } from '@/components/SignupForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -14,9 +17,22 @@ export const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
-    // Redirect authenticated users
     if (user) {
-      navigate('/dashboard');
+      const fetchDashboards = async () => {
+        const { data } = await supabase
+          .from('dashboard_layout')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          navigate(`/dashboard/${data[0].id}`);
+        } else {
+          navigate('/dashboard');
+        }
+      };
+      fetchDashboards();
     }
   }, [user, navigate]);
 
