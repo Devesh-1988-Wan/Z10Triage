@@ -1,3 +1,4 @@
+// src/pages/Dashboard.tsx
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -7,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Settings, Edit, Plus, Share2 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DateRangePicker } from '@/components/DateRangePicker'; // Corrected import path and component name
 import { AdminForms } from '@/components/AdminForms';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,8 +95,8 @@ const Dashboard: React.FC = () => {
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <DatePickerWithRange
-            date={dateRange}
+          <DateRangePicker // Corrected component name
+            dateRange={dateRange}
             onDateChange={(range) => setDateRange(range)}
           />
           <Button variant="outline" size="icon">
