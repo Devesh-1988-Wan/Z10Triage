@@ -51,22 +51,18 @@ export const Auth: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                <TabsTrigger value="reset">Reset</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="login" className="mt-6">
+              <TabsContent value="login">
                 <LoginForm onSwitchToReset={() => setActiveTab('reset')} />
               </TabsContent>
-              
-              <TabsContent value="signup" className="mt-6">
+              <TabsContent value="signup">
                 <SignupForm />
               </TabsContent>
-              
-              <TabsContent value="reset" className="mt-6">
+              <TabsContent value="reset">
                 <ResetPasswordForm onBackToLogin={() => setActiveTab('login')} />
               </TabsContent>
             </Tabs>
@@ -76,3 +72,5 @@ export const Auth: React.FC = () => {
     </div>
   );
 };
+
+export default Auth;
