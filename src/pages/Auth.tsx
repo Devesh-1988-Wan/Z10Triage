@@ -29,7 +29,7 @@ export const Auth: React.FC = () => {
         if (data && data.length > 0) {
           navigate(`/dashboard/${data[0].id}`);
         } else {
-          navigate('/dashboard');
+          navigate('/dashboard/');
         }
       };
       fetchDashboards();
