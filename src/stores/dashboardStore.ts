@@ -1,5 +1,4 @@
-import create from 'zustand';
-import { createContext, useContext } from 'react';
+import { create } from 'zustand';
 import { WidgetConfig, DashboardLayout } from '@/types/dashboard';
 
 interface DashboardState {
@@ -88,22 +87,3 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       };
     }),
 }));
-
-export const DashboardContext = createContext<DashboardState | undefined>(undefined);
-
-export const DashboardProvider = ({ children }: { children: React.ReactNode }) => {
-  const store = useDashboardStore();
-  return (
-    <DashboardContext.Provider value={store}>
-      {children}
-    </DashboardContext.Provider>
-  );
-};
-
-export const useDashboard = () => {
-  const context = useContext(DashboardContext);
-  if (context === undefined) {
-    throw new Error('useDashboard must be used within a DashboardProvider');
-  }
-  return context;
-};
