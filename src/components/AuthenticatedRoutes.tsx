@@ -1,22 +1,20 @@
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute } from './ProtectedRoute';
+import Dashboard from '../pages/Dashboard';
+import { WidgetEditorPage } from '../pages/WidgetEditorPage';
+import { DashboardHub } from '../pages/DashboardHub';
+import NotFound from '../pages/NotFound';
+
 
 const AuthenticatedRoutes: React.FC = () => {
-  const { user, logout, isLoading } = useAuth();
-
-  if (!user) {
-    return <div>Redirecting...</div>;
-  }
-
   return (
-    <div style={{ maxWidth: '800px', margin: '100px auto' }}>
-      <h1>Welcome to the Dashboard, {user.name}!</h1>
-      <p>Your email is: {user.email}</p>
-      <p>Your role is: {user.role}</p>
-      <button onClick={logout} disabled={isLoading}>
-        {isLoading ? 'Logging out...' : 'Log Out'}
-      </button>
-    </div>
+    <Routes>
+      <Route path="/" element={<ProtectedRoute><DashboardHub /></ProtectedRoute>} />
+      <Route path="/:dashboardId" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/editor/:dashboardId" element={<ProtectedRoute requiredRole="admin"><WidgetEditorPage /></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
