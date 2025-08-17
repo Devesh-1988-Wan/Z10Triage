@@ -1,4 +1,6 @@
-// Enhanced dashboard builder types
+// src/types/dashboardBuilder.ts
+import { DashboardLayout, WidgetConfig } from './dashboard';
+
 export interface ChartConfig {
   type: 'bar' | 'line' | 'pie' | 'trend' | 'heatmap';
   dataSource: string;
@@ -111,6 +113,3 @@ export interface DashboardBuilderState {
   currentVersion: number;
   liveUpdates: LiveUpdateConfig;
 }
-
-// Import existing types
-import { DashboardLayout, WidgetConfig } from './dashboard';
