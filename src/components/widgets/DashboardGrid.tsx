@@ -5,29 +5,28 @@ import { WidgetConfig } from '@/types/dashboard';
 import { WidgetRenderer } from '../WidgetRenderer';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { ErrorBoundary } from './ErrorBoundary'; // Import the new ErrorBoundary component
+import { ErrorBoundary } from './ErrorBoundary';
+import { useDashboardStore } from '@/stores/dashboardStore';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface DashboardGridProps {
   layout: WidgetConfig[];
   onLayoutChange: (layout: Layout[]) => void;
-  isDraggable: boolean;
+  isEditable: boolean;
   data: any;
   isLoading: boolean;
-  onWidgetClick: (widget: WidgetConfig) => void;
-  onUpdateWidget: (widget: WidgetConfig) => void;
 }
 
 export const DashboardGrid: React.FC<DashboardGridProps> = ({
   layout,
   onLayoutChange,
-  isDraggable,
+  isEditable,
   data,
   isLoading,
-  onWidgetClick,
-  onUpdateWidget
 }) => {
+  const { selectedWidgets, toggleWidgetSelection } = useDashboardStore();
+
   const layouts = {
     lg: layout.map(w => ({ ...w.layout, i: w.id })),
   };
@@ -37,22 +36,28 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
       className="layout"
       layouts={layouts}
       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-      cols={{ lg: 6, md: 5, sm: 4, xs: 2, xxs: 1 }}
-      rowHeight={150}
+      cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+      rowHeight={100}
       onLayoutChange={(_, allLayouts) => onLayoutChange(allLayouts.lg)}
-      isDraggable={isDraggable}
-      isResizable={isDraggable}
+      isDraggable={isEditable}
+      isResizable={isEditable}
     >
       {layout.map((widget) => (
-        <div key={widget.id}>
+        <div
+          key={widget.id}
+          className={`group ${selectedWidgets.includes(widget.id) ? 'outline-2 outline-dashed outline-primary' : ''}`}
+          onClick={(e) => {
+            if (isEditable && e.ctrlKey) {
+              toggleWidgetSelection(widget.id);
+            }
+          }}
+        >
           <ErrorBoundary>
             <WidgetRenderer
               config={widget}
               data={data}
               isLoading={isLoading}
-              onClick={() => onWidgetClick(widget)}
-              onUpdate={onUpdateWidget}
-              isEditable={isDraggable}
+              isEditable={isEditable}
             />
           </ErrorBoundary>
         </div>
