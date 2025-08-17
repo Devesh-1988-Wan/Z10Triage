@@ -17,6 +17,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { EditableText } from './EditableText';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BarChartWidget } from './widgets/charts/BarChart';
+import { LineChartWidget } from './widgets/charts/LineChart';
+import { PieChartWidget } from './widgets/charts/PieChart';
+import { HeatmapWidget } from './widgets/charts/Heatmap';
+import { TextWidget } from './widgets/content/TextWidget';
+import { CounterWidget } from './widgets/CounterWidget';
+
 
 // Map string icon names to LucideReact components
 import { Bug, TrendingUp, Users, Clock, Shield, Zap } from 'lucide-react';
@@ -87,6 +94,18 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, is
         return <div onClick={onClick} className="cursor-pointer"><SecurityUpdatesWidget /></div>;
       case 'SalesChart':
         return <SalesChart />;
+      case 'BarChart':
+        return <BarChartWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+      case 'LineChart':
+        return <LineChartWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+      case 'PieChart':
+        return <PieChartWidget title={title} description={description} data={data.customerTickets} config={props.chartConfig} />;
+      case 'Heatmap':
+        return <HeatmapWidget title={title} description={description} data={data.bugReports} config={props.chartConfig} />;
+      case 'TextWidget':
+        return <TextWidget title={title} description={description} content={props.content} allowRichText={props.allowRichText} />;
+      case 'CounterWidget':
+        return <CounterWidget title={title} value={props.valueKey} />;
       default:
         return (
           <Alert variant="destructive">
