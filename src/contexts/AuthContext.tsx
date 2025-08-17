@@ -36,8 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', supabaseUser.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is not a fatal error
-          console.error('Error fetching user profile:', error);
+        if (error && error.code !== 'PGRST116') {
           setUser(null);
         } else if (profile) {
           setUser({
@@ -47,13 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: profile.name,
           });
         } else {
-          // This case handles a logged-in user that doesn't have a profile yet.
-          // You might want to redirect them to a profile creation page.
-          console.warn('User is logged in but has no profile.');
           setUser(null);
         }
       } catch (err) {
-        console.error('Unhandled error in fetchAndSetUserProfile:', err);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -101,10 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async (): Promise<void> => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
-    }
+    await supabase.auth.signOut();
     setUser(null);
     setIsLoading(false);
   };
