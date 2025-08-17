@@ -20,9 +20,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Debug log to monitor state changes from outside the useEffect
+  console.log('[AuthProvider State]', { isLoading, isInitialized, user });
+
   useEffect(() => {
-    // --- Refactor #1: Extracted profile fetching logic into its own function ---
     const fetchAndSetUserProfile = async (supabaseUser: SupabaseUser) => {
+      console.log('[Auth] Fetching profile for user:', supabaseUser.id);
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -30,66 +33,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', supabaseUser.id)
           .single();
 
+        // This is the most important log for debugging the blank page issue
+        console.log('[Auth] Profile fetch result:', { profile, error });
+
         if (error) {
           console.error('Error fetching user profile:', error);
-          setUser(null); // Clear user state on profile fetch error
+          setUser(null);
         } else if (profile) {
+          console.log('[Auth] Profile found, setting user state.');
           setUser({
             id: profile.user_id,
             email: profile.email,
             role: profile.role as 'super_admin' | 'admin' | 'viewer',
             name: profile.name,
           });
+        } else {
+            console.warn('[Auth] Profile not found for user:', supabaseUser.id);
+            setUser(null); // Explicitly set user to null if no profile found
         }
       } catch (err) {
-        console.error('Unhandled error fetching user profile:', err);
+        console.error('Unhandled error in fetchAndSetUserProfile:', err);
         setUser(null);
       }
     };
 
     const handleUserSession = async (session: Session | null) => {
+      console.log('[Auth] Handling user session:', session ? 'Session exists' : 'No session');
       if (session?.user) {
         await fetchAndSetUserProfile(session.user);
       } else {
         setUser(null);
       }
-      // This should run only once after the initial check is complete
       if (!isInitialized) {
+        console.log('[Auth] Initializing app.');
         setIsInitialized(true);
       }
+      console.log('[Auth] Setting isLoading to false.');
       setIsLoading(false);
     };
 
-    // Check for an existing session on initial render
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleUserSession(session);
     });
 
-    // Set up the listener for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
+      console.log(`[Auth] onAuthStateChange event: ${event}`);
+      if (['SIGNED_IN', 'SIGNED_OUT'].includes(event)) {
         setIsLoading(true);
         await handleUserSession(session);
-      } else if (event === 'SIGNED_OUT') {
-        setIsLoading(true);
-        // handleUserSession will set user to null and isLoading to false
-        await handleUserSession(null);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Refresh profile data without a loading spinner for a seamless experience
         await fetchAndSetUserProfile(session.user);
       }
     });
 
-    // Cleanup subscription on component unmount
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // Correctly using an empty dependency array
+  }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    // isLoading will be set to false by the onAuthStateChange listener
+    if (error) setIsLoading(false); // Turn off loading on error
     return { success: !error, error: error?.message };
   };
 
@@ -101,21 +106,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: { emailRedirectTo: redirectUrl, data: { name } },
     });
-    // isLoading will be set to false by the onAuthStateChange listener on error, or on success after email confirmation.
-    if(error) setIsLoading(false);
+    if (error) setIsLoading(false);
     return { success: !error, error: error?.message };
   };
 
-  // --- Refactor #2: Simplified logout to rely on the auth listener ---
   const logout = async (): Promise<void> => {
-    setIsLoading(true); // Set loading for immediate UI feedback
+    setIsLoading(true);
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error logging out:', error);
-      // Ensure loading is turned off if the sign-out process fails
       setIsLoading(false);
     }
-    // The 'SIGNED_OUT' event in onAuthStateChange will handle resetting user state.
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
