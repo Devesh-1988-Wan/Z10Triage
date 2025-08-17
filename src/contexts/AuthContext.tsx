@@ -61,8 +61,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         setIsLoading(true);
+        await handleUserSession(session);
+      } else if (event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+           const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+            if(!error && profile){
+                 setUser({
+                  id: profile.user_id,
+                  email: profile.email,
+                  role: profile.role as 'super_admin' | 'admin' | 'viewer',
+                  name: profile.name
+                });
+            }
+        }
       }
-      await handleUserSession(session);
     });
 
     return () => subscription.unsubscribe();
