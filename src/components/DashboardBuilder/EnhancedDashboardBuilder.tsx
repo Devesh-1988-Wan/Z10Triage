@@ -1,3 +1,4 @@
+// src/components/DashboardBuilder/EnhancedDashboardBuilder.tsx
 import React from 'react';
 import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
 import { WidgetLibrary, WidgetTemplate } from './WidgetLibrary';
