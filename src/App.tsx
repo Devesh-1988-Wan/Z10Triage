@@ -10,7 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
-import { WidgetEditorPage } from "./pages/WidgetEditorPage";
+import { EnhancedDashboardBuilder } from "@/components/DashboardBuilder/EnhancedDashboardBuilder";
 import NotFound from "./pages/NotFound";
 import { PublicDashboard } from "./pages/PublicDashboard";
 import { DashboardHub } from './pages/DashboardHub';
@@ -45,7 +45,7 @@ const App: React.FC = () => {
               } />
               <Route path="/dashboard/editor/:dashboardId" element={
                 <ProtectedRoute requiredRole="admin">
-                  <WidgetEditorPage />
+                  <EnhancedDashboardBuilder />
                 </ProtectedRoute>
               } />
               <Route path="/public/dashboard/:shareKey" element={<PublicDashboard />} />
