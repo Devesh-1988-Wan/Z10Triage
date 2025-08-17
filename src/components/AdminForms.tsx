@@ -29,7 +29,7 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
   dashboardMetrics
 }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('bug');
+  const [activeTab, setActiveTab] = useState('all');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(dashboardMetrics);
 
   useEffect(() => {
@@ -63,13 +63,27 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
+            <TabsTrigger value="all">All Forms</TabsTrigger>
             <TabsTrigger value="bug">Bug Reports</TabsTrigger>
             <TabsTrigger value="support">Customer Support</TabsTrigger>
             <TabsTrigger value="dev">Development</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="content">Content & Media</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="all" className="mt-6 space-y-8">
+            <BugReportForm onDataUpdate={onDataUpdate} />
+            <CustomerSupportForm onDataUpdate={onDataUpdate} />
+            <DevelopmentTicketForm onDataUpdate={onDataUpdate} />
+            {metrics && (
+              <DashboardMetricsForm 
+                initialMetrics={metrics} 
+                onDataUpdate={onDataUpdate} 
+              />
+            )}
+            <ContentManager onContentUpdate={onDataUpdate} widgetContent={widgetContent} />
+          </TabsContent>
 
           <TabsContent value="bug" className="mt-6">
             <BugReportForm onDataUpdate={onDataUpdate} />
