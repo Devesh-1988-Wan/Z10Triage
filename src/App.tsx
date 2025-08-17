@@ -1,5 +1,5 @@
 // src/App.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,13 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import { Auth } from "./pages/Auth";
-import { Dashboard } from "./pages/Dashboard";
-import { EnhancedDashboardBuilder } from "@/components/DashboardBuilder/EnhancedDashboardBuilder";
-import NotFound from "./pages/NotFound";
-import { PublicDashboard } from "./pages/PublicDashboard";
-import { DashboardHub } from './pages/DashboardHub';
+import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +17,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Lazy-loaded components
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const EnhancedDashboardBuilder = lazy(() => import("@/components/DashboardBuilder/EnhancedDashboardBuilder"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PublicDashboard = lazy(() => import("./pages/PublicDashboard"));
+const DashboardHub = lazy(() => import('./pages/DashboardHub'));
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -46,27 +49,29 @@ const App: React.FC = () => {
       <TooltipProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <DashboardHub />
-                </ProtectedRoute>
-              } />
-               <Route path="/dashboard/:dashboardId" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard/editor/:dashboardId" element={
-                <ProtectedRoute requiredRole="admin">
-                  <EnhancedDashboardBuilder />
-                </ProtectedRoute>
-              } />
-              <Route path="/public/dashboard/:shareKey" element={<PublicDashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <DashboardHub />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/:dashboardId" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard/editor/:dashboardId" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <EnhancedDashboardBuilder />
+                  </ProtectedRoute>
+                } />
+                <Route path="/public/dashboard/:shareKey" element={<PublicDashboard />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
           <Toaster />
           <Sonner />
