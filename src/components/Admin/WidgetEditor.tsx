@@ -101,10 +101,6 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
         toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
         return;
     }
-    if (!dashboardId) {
-        toast({ title: "Error", description: "Dashboard ID is missing.", variant: "destructive" });
-        return;
-    }
 
     const payload = {
         layout: { widgets: layoutToEdit.widgets },
