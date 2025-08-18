@@ -25,14 +25,7 @@ export const DashboardSlideshow: React.FC<DashboardSlideshowProps> = ({ layout, 
       {layout.widgets.map((widgetConfig) => (
         <SwiperSlide key={widgetConfig.id}>
           <div className="p-4">
-            <WidgetRenderer 
-              config={widgetConfig} 
-              data={data} 
-              isLoading={false}
-              onClick={() => {}}
-              onUpdate={() => {}}
-              isEditable={false}
-            />
+            <WidgetRenderer config={widgetConfig} data={data} />
           </div>
         </SwiperSlide>
       ))}

@@ -87,7 +87,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
     title: '',
     description: '',
     props: {},
-    layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
+    layout: { x: 0, y: 0, w: 1, h: 1 },
   });
 
   useEffect(() => {
@@ -99,6 +99,10 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
   const handleSaveLayout = async () => {
     if (!user?.id) {
         toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
+        return;
+    }
+    if (!dashboardId) {
+        toast({ title: "Error", description: "Dashboard ID is missing.", variant: "destructive" });
         return;
     }
 
@@ -147,7 +151,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: newWidgetForm.title || 'New Widget',
       description: newWidgetForm.description,
       props: newWidgetForm.props || {},
-      layout: { ...newWidgetForm.layout, i: uuidv4() } as { x: number; y: number; w: number; h: number; i: string },
+      layout: newWidgetForm.layout || { x: 0, y: 0, w: 1, h: 1 },
     };
     setLayoutToEdit(prev => ({
       ...prev,
@@ -158,7 +162,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: '',
       description: '',
       props: {},
-      layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
+      layout: { x: 0, y: 0, w: 1, h: 1 },
     });
     setIsDialogOpen(false); // Close dialog after adding
   };
@@ -199,7 +203,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
       title: '',
       description: '',
       props: AVAILABLE_WIDGET_TYPES.find(w => w.value === 'MetricCard')?.defaultProps || {},
-      layout: { x: 0, y: 0, w: 1, h: 1, i: '' },
+      layout: { x: 0, y: 0, w: 1, h: 1 },
     });
     setIsDialogOpen(true);
   };
@@ -222,17 +226,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({
           ...prev!,
           layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
         }));
-      } else if (id.startsWith('props.')) {
-        const propKey = id.split('.')[1];
-        setEditingWidget(prev => ({
-          ...prev!,
-          props: {
-            ...prev!.props,
-            [propKey]: value
-          },
-        }));
-      }
-      else {
+      } else {
         setEditingWidget(prev => ({ ...prev!, [id]: value }));
       }
     } else {

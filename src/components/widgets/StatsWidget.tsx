@@ -58,7 +58,7 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
               <div className="text-2xl font-bold text-warning">{avgEfficiency}%</div>
               <div className="text-xs text-muted-foreground">Efficiency</div>
             </div>
-            <div className="text-center p-3 bg-accent rounded-lg">
+            <div className="text-center p-3 bg-accent/10 rounded-lg">
               <Zap className="w-6 h-6 mx-auto mb-2 text-accent-foreground" />
               <div className="text-2xl font-bold text-accent-foreground">{totalCreated > 0 ? Math.round((totalResolved / totalCreated) * 100) : 0}%</div>
               <div className="text-xs text-muted-foreground">Resolution Rate</div>

@@ -98,7 +98,6 @@ export const WidgetEditorPage: React.FC = () => {
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
             data={data}
-            isLoading={isLoading}
             onWidgetClick={() => {}}
             onUpdateWidget={handleUpdateWidget}
           />

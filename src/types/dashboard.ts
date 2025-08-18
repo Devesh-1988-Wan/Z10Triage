@@ -2,8 +2,8 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
   role: 'super_admin' | 'admin' | 'viewer';
+  name: string;
 }
 
 export interface BugReport {

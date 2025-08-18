@@ -1,5 +1,3 @@
-// src/pages/Auth.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +6,6 @@ import { LoginForm } from '@/components/LoginForm';
 import { ResetPasswordForm } from '@/components/ResetPasswordForm';
 import { SignupForm } from '@/components/SignupForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 export const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -17,22 +14,9 @@ export const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
+    // Redirect authenticated users
     if (user) {
-      const fetchDashboards = async () => {
-        const { data } = await supabase
-          .from('dashboard_layout')
-          .select('id')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: true })
-          .limit(1);
-
-        if (data && data.length > 0) {
-          navigate(`/dashboard/${data[0].id}`);
-        } else {
-          navigate('/dashboard/');
-        }
-      };
-      fetchDashboards();
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -67,18 +51,22 @@ export const Auth: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="reset">Reset</TabsTrigger>
               </TabsList>
-              <TabsContent value="login">
+              
+              <TabsContent value="login" className="mt-6">
                 <LoginForm onSwitchToReset={() => setActiveTab('reset')} />
               </TabsContent>
-              <TabsContent value="signup">
+              
+              <TabsContent value="signup" className="mt-6">
                 <SignupForm />
               </TabsContent>
-              <TabsContent value="reset">
+              
+              <TabsContent value="reset" className="mt-6">
                 <ResetPasswordForm onBackToLogin={() => setActiveTab('login')} />
               </TabsContent>
             </Tabs>
@@ -88,5 +76,3 @@ export const Auth: React.FC = () => {
     </div>
   );
 };
-
-export default Auth;
