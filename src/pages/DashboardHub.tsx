@@ -188,10 +188,12 @@ export const DashboardHub: React.FC = () => {
             Select a dashboard to view or create a new one to get started.
           </p>
         </div>
-        <Button onClick={handleCreateNewDashboard}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Dashboard
-        </Button>
+        {dashboards.length > 0 && (
+            <Button onClick={handleCreateNewDashboard}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Dashboard
+            </Button>
+        )}
       </div>
       {renderContent()}
     </DashboardLayoutComponent>
