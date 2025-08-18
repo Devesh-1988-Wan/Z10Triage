@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
           } else {
             setUser({
-              id: profile.id,
+              id: session.user.id, // Corrected: Use the ID from the auth session
               email: profile.email,
               role: profile.role as 'super_admin' | 'admin' | 'viewer',
               name: profile.name
