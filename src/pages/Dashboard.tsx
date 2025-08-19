@@ -7,6 +7,14 @@ import { CustomerSupportTable } from '@/components/dashboard/CustomerSupportTabl
 import { MetricCard } from '@/components/dashboard/MetricCard'; // Placeholder
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Settings } from 'lucide-react';
+import { WidgetRenderer } from '@/components/WidgetRenderer';
+import { cn } from '@/lib/utils';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 // A mapping from the layout config to the actual React components
 const widgetComponentMap = {
@@ -17,7 +25,9 @@ const widgetComponentMap = {
 };
 
 const DashboardPage = () => {
-  const { dashboardLayout, isLoading, error, ...data } = useDashboardData();
+  const { dashboardLayout, isLoading, error, refetch, bugReports, customerTickets, developmentTickets, dashboardMetrics } = useDashboardData();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   if (error) {
     return <div className="text-destructive text-center p-8">{error}</div>;
@@ -27,7 +37,7 @@ const DashboardPage = () => {
   // This provides an excellent perceived performance.
   if (isLoading || !dashboardLayout) {
     // You might want a different loading state if dashboardLayout is null
-    const layout = dashboardLayout ?? { widgets: Array(10).fill({ id: Math.random() }) };
+    const layout = dashboardLayout ?? { widgets: Array(10).fill({ id: Math.random(), layout: { w: 1, h: 1 } }) };
     return (
       <div className="dashboard-grid p-4">
         {layout.widgets.map((widget) => (
@@ -43,31 +53,10 @@ const DashboardPage = () => {
 
   // Render the actual widgets with data once loading is complete
   return (
-    <main className="dashboard-grid p-4">
-      {dashboardLayout.widgets.map((widgetConfig) => {
-        const WidgetComponent = widgetComponentMap[widgetConfig.component];
-        if (!WidgetComponent) {
-          return <div key={widgetConfig.id}>Unknown widget type</div>;
-        }
-        
-        // Pass the relevant data to each component
-        const componentProps = {
-            developmentTickets: data.developmentTickets,
-            bugReports: data.bugReports,
-            customerTickets: data.customerTickets,
-            metrics: data.dashboardMetrics,
-            ...widgetConfig.props // Pass props from layout config
-        };
-
-        return (
-          <div key={widgetConfig.id} style={{ gridColumn: `span ${widgetConfig.layout.w}`, gridRow: `span ${widgetConfig.layout.h}` }}>
-             <WidgetComponent {...componentProps} />
-          </div>
-<<<<<<< HEAD
-        );
-      })}
-    </main>
-=======
+    <DashboardLayout onExportPdf={() => {}}>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
           {isAdmin && (
             <Button asChild variant="outline">
               <Link to="/dashboard/editor">
@@ -98,10 +87,8 @@ const DashboardPage = () => {
             </div>
           ))}
         </div>
-
       </div>
     </DashboardLayout>
->>>>>>> parent of 73404c4 (update)
   );
 };
 
