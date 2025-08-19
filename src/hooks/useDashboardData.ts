@@ -149,22 +149,6 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       },
       layout: { x: 3, y: 7, w: 1, h: 1 },
     },
-    {
-      id: 'data-management',
-      component: 'DataManagement',
-      title: 'Data Management',
-      description: 'Create and manage bug reports, customer support tickets, and development tasks',
-      props: {},
-      layout: { x: 0, y: 8, w: 6, h: 2 },
-    },
-    {
-      id: 'security-infrastructure-updates',
-      component: 'SecurityInfrastructureUpdates',
-      title: 'Security & Infrastructure Updates',
-      description: 'Current security fixes and infrastructure progress',
-      props: {},
-      layout: { x: 0, y: 10, w: 6, h: 2 },
-    },
   ],
 };
 
