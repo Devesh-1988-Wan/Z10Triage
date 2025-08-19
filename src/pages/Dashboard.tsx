@@ -1,18 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, Settings, Plus, LayoutTemplate } from 'lucide-react';
+import { Loader2, AlertCircle, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDashboardData, DEFAULT_DASHBOARD_LAYOUT } from '@/hooks/useDashboardData';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AdminForms } from '@/components/AdminForms';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 
 export const Dashboard: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -27,11 +26,8 @@ export const Dashboard: React.FC = () => {
     refetch,
   } = useDashboardData();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isSavingDefault, setIsSavingDefault] = useState(false);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
-  const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
 
   const handleExportPdf = async () => {
     try {
@@ -46,50 +42,6 @@ export const Dashboard: React.FC = () => {
         description: 'Failed to generate PDF report. Please try again.',
         variant: 'destructive',
       });
-    }
-  };
-
-  const handleLoadDefaultLayout = async () => {
-    if (!user) return;
-    setIsSavingDefault(true);
-    try {
-      const { data: existingLayout, error: fetchError } = await supabase
-        .from('dashboard_layout')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: no rows found
-        throw fetchError;
-      }
-
-      if (existingLayout) {
-        const { error: updateError } = await supabase
-          .from('dashboard_layout')
-          .update({ layout: DEFAULT_DASHBOARD_LAYOUT })
-          .eq('id', existingLayout.id);
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('dashboard_layout')
-          .insert({ user_id: user.id, layout: DEFAULT_DASHBOARD_LAYOUT, is_default: false });
-        if (insertError) throw insertError;
-      }
-
-      toast({
-        title: "Default Layout Loaded",
-        description: "The default widget layout has been applied to your dashboard.",
-      });
-      refetch(); // Refresh dashboard data to show the new layout
-    } catch (error) {
-      console.error("Error saving default layout:", error);
-      toast({
-        title: "Error",
-        description: `Failed to load default layout: ${error instanceof Error ? error.message : String(error)}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingDefault(false);
     }
   };
 
@@ -145,60 +97,24 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Dynamic Widget Rendering */}
-        {hasWidgets ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {dashboardLayout.widgets.map((widgetConfig) => (
-              <div
-                key={widgetConfig.id}
-                className={cn(`col-span-${widgetConfig.layout.w}`)}
-              >
-                <WidgetRenderer
-                  config={widgetConfig}
-                  data={{
-                    bugReports,
-                    customerTickets,
-                    developmentTickets,
-                    dashboardMetrics,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Card className="shadow-card">
-            <CardContent className="pt-6 text-center">
-              {isAdmin ? (
-                <div className="space-y-4 max-w-lg mx-auto py-8">
-                  <LayoutTemplate className="w-16 h-16 mx-auto text-muted-foreground" />
-                  <h2 className="text-2xl font-semibold">Your Dashboard is Empty</h2>
-                  <p className="text-muted-foreground">
-                    You can start by creating a custom layout from scratch or by loading our recommended default layout.
-                  </p>
-                  <div className="flex justify-center gap-4 pt-4">
-                    <Button asChild>
-                      <Link to="/dashboard/editor">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Start with a Blank Canvas
-                      </Link>
-                    </Button>
-                    <Button variant="outline" onClick={handleLoadDefaultLayout} disabled={isSavingDefault}>
-                      {isSavingDefault ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4 mr-2" />
-                      )}
-                      Load Default Layout
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  No widgets have been configured for this dashboard. Please contact an administrator.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {dashboardLayout?.widgets.map((widgetConfig) => (
+            <div
+              key={widgetConfig.id}
+              className={cn(`col-span-${widgetConfig.layout.w}`)}
+            >
+              <WidgetRenderer
+                config={widgetConfig}
+                data={{
+                  bugReports,
+                  customerTickets,
+                  developmentTickets,
+                  dashboardMetrics,
+                }}
+              />
+            </div>
+          ))}
+        </div>
 
         {/* Admin Forms - Only show for admins */}
         {isAdmin && (
