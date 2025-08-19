@@ -1,11 +1,11 @@
 // src/pages/dashboard.tsx
 
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { DevelopmentPipeline } from '@/components/dashboard/DevelopmentPipeline';
-import { BugChart } from '@/components/dashboard/BugChart'; // Placeholder
-import { CustomerSupportTable } from '@/components/dashboard/CustomerSupportTable'; // Placeholder
-import { MetricCard } from '@/components/dashboard/MetricCard'; // Placeholder
-import { Card, CardContent } from '@/components/ui/card';
+import { DevelopmentPipeline } from '@/components/DevelopmentPipeline';
+import { BugChart } from '@/components/BugChart';
+import { CustomerSupportTable } from '@/components/CustomerSupportTable';
+import { MetricCard } from '@/components/MetricCard';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
