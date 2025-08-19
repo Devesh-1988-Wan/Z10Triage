@@ -3,15 +3,40 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = "https://wpqcdhyhymtsvzmnrgud.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwcWNkaHloeW10c3Z6bW5yZ3VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzY3NzUsImV4cCI6MjA3MDY1Mjc3NX0.M_W0k7lkh4qu6xlg1PC8HAMo54mC7ozw7x-Y5bed3Uc";
+const SUPABASE_PUBLISHABLE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwcWNkaHloeW10c3Z6bW5yZ3VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzY3NzUsImV4cCI6MjA3MDY1Mjc3NX0.M_W0k7lkh4qu6xlg1PC8HAMo54mC7ozw7x-Y5bed3Uc";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: false,
-    autoRefreshToken: true,
+export const supabase = createClient<Database>(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      // keep session across refreshes and tabs
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
+
+// ✅ Prevent tab reloads on session updates
+// Just update state, don't reload window
+supabase.auth.onAuthStateChange((event, session) => {
+  switch (event) {
+    case "SIGNED_IN":
+      console.log("User signed in:", session?.user?.email);
+      break;
+    case "TOKEN_REFRESHED":
+      console.log("Token refreshed silently");
+      break;
+    case "SIGNED_OUT":
+      console.log("User signed out");
+      break;
+    default:
+      console.log("Auth event:", event);
   }
 });
