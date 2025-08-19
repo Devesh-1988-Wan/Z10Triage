@@ -19,6 +19,8 @@ const AVAILABLE_WIDGET_TYPES = [
   { value: 'BugChart', label: 'Bug Chart', defaultProps: {} },
   { value: 'CustomerSupportTable', label: 'Customer Support Table', defaultProps: {} },
   { value: 'DevelopmentPipeline', label: 'Development Pipeline', defaultProps: {} },
+  { value: 'DataManagement', label: 'Data Management', defaultProps: {} },
+  { value: 'SecurityInfrastructureUpdates', label: 'Security & Infrastructure Updates', defaultProps: {} },
 ];
 
 // Map string icon names to LucideReact components for display in the editor

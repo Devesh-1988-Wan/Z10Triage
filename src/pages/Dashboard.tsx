@@ -63,9 +63,45 @@ const DashboardPage = () => {
           <div key={widgetConfig.id} style={{ gridColumn: `span ${widgetConfig.layout.w}`, gridRow: `span ${widgetConfig.layout.h}` }}>
              <WidgetComponent {...componentProps} />
           </div>
+<<<<<<< HEAD
         );
       })}
     </main>
+=======
+          {isAdmin && (
+            <Button asChild variant="outline">
+              <Link to="/dashboard/editor">
+                <Settings className="w-4 h-4 mr-2" />
+                Customize Dashboard
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* Dynamic Widget Rendering */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {dashboardLayout?.widgets.map((widgetConfig) => (
+            <div
+              key={widgetConfig.id}
+              className={cn(`col-span-${widgetConfig.layout.w}`)}
+            >
+              <WidgetRenderer
+                config={widgetConfig}
+                data={{
+                  bugReports,
+                  customerTickets,
+                  developmentTickets,
+                  dashboardMetrics,
+                }}
+                onDataUpdate={refetch}
+              />
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </DashboardLayout>
+>>>>>>> parent of 73404c4 (update)
   );
 };
 

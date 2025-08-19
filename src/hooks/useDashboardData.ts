@@ -2,9 +2,180 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+<<<<<<< HEAD
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout } from '@/types/dashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEFAULT_DASHBOARD_LAYOUT } from '@/config/dashboard'; // Moved default layout to a separate file for clarity
+=======
+import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get user ID
+
+// Default dashboard layout if no custom layout is found
+export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
+  widgets: [
+    {
+      id: 'metric-bugs-fixed',
+      component: 'MetricCard',
+      title: 'Bugs Fixed This Week',
+      description: 'Marked as Dev Done',
+      props: {
+        valueKey: 'totalBugsFixed',
+        icon: 'Bug',
+        change: { value: '+18%', trend: 'up' },
+      },
+      layout: { x: 0, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-tickets-resolved',
+      component: 'MetricCard',
+      title: 'Total Tickets Resolved',
+      description: 'Including Tasks/Stories/Bugs',
+      props: {
+        valueKey: 'totalTicketsResolved',
+        icon: 'TrendingUp',
+        change: { value: '+12%', trend: 'up' },
+      },
+      layout: { x: 1, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-blocker-bugs',
+      component: 'MetricCard',
+      title: 'Blocker Bugs',
+      description: 'Highest priority issues',
+      props: {
+        valueKey: 'blockerBugs',
+        icon: 'Shield',
+        priority: 'blocker',
+      },
+      layout: { x: 2, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-critical-bugs',
+      component: 'MetricCard',
+      title: 'Critical Bugs',
+      description: 'Requires immediate attention',
+      props: {
+        valueKey: 'criticalBugs',
+        icon: 'Bug',
+        priority: 'critical',
+      },
+      layout: { x: 3, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-high-priority-bugs',
+      component: 'MetricCard',
+      title: 'High Priority Bugs',
+      description: 'Important but not critical',
+      props: {
+        valueKey: 'highPriorityBugs',
+        icon: 'Clock',
+        priority: 'high',
+      },
+      layout: { x: 4, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-active-customer-support',
+      component: 'MetricCard',
+      title: 'Active Customer Support',
+      description: 'Live & WIP tickets',
+      props: {
+        valueKey: 'activeCustomerSupport',
+        icon: 'Users',
+      },
+      layout: { x: 5, y: 0, w: 1, h: 1 },
+    },
+    {
+      id: 'bug-chart',
+      component: 'BugChart',
+      title: 'Bug Priority Distribution',
+      description: 'Current open bugs by priority level',
+      props: {},
+      layout: { x: 0, y: 1, w: 3, h: 2 },
+    },
+    {
+      id: 'customer-support-table',
+      component: 'CustomerSupportTable',
+      title: 'Customer Support - In Progress',
+      description: 'Active customer support tickets and their status',
+      props: {},
+      layout: { x: 0, y: 3, w: 6, h: 2 },
+    },
+    {
+      id: 'development-pipeline',
+      component: 'DevelopmentPipeline',
+      title: 'Development Pipeline - August Priorities',
+      description: '38 tickets currently in development pipeline',
+      props: {},
+      layout: { x: 0, y: 5, w: 6, h: 2 },
+    },
+    {
+      id: 'metric-functional-stability',
+      component: 'MetricCard',
+      title: 'Functional Stability',
+      description: 'Webstore, DAM, Tenant issues',
+      props: {
+        valueKey: 'developmentProgress',
+        icon: 'Zap',
+        change: { value: '+2%', trend: 'up' },
+      },
+      layout: { x: 0, y: 7, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-performance',
+      component: 'MetricCard',
+      title: 'Performance',
+      description: 'Cart checkout slowness',
+      props: {
+        valueKey: 'developmentProgress',
+        icon: 'TrendingUp',
+        priority: 'critical',
+      },
+      layout: { x: 1, y: 7, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-queries',
+      component: 'MetricCard',
+      title: 'Queries',
+      description: 'Checkout & font issues',
+      props: {
+        valueKey: 'developmentProgress',
+        icon: 'Bug',
+        priority: 'medium',
+      },
+      layout: { x: 2, y: 7, w: 1, h: 1 },
+    },
+    {
+      id: 'metric-look-feel',
+      component: 'MetricCard',
+      title: 'Look & Feel',
+      description: 'UI & display issues',
+      props: {
+        valueKey: 'developmentProgress',
+        icon: 'Shield',
+        priority: 'low',
+      },
+      layout: { x: 3, y: 7, w: 1, h: 1 },
+    },
+    {
+      id: 'data-management',
+      component: 'DataManagement',
+      title: 'Data Management',
+      description: 'Create and manage bug reports, customer support tickets, and development tasks',
+      props: {},
+      layout: { x: 0, y: 8, w: 6, h: 2 },
+    },
+    {
+      id: 'security-infrastructure-updates',
+      component: 'SecurityInfrastructureUpdates',
+      title: 'Security & Infrastructure Updates',
+      description: 'Current security fixes and infrastructure progress',
+      props: {},
+      layout: { x: 0, y: 10, w: 6, h: 2 },
+    },
+  ],
+};
+
+>>>>>>> parent of 73404c4 (update)
 
 export const useDashboardData = () => {
   const { user } = useAuth();
