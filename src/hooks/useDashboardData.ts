@@ -295,10 +295,11 @@ export const useDashboardData = () => {
   };
 
   useEffect(() => {
-    if (user !== undefined) {
-      fetchData();
+  // We check for the user's existence inside the effect now
+  if (user?.id) { 
+    fetchData();
     }
-  }, [user]);
+  }, [user?.id]); // Depend on the stable user ID instead
 
   return {
     dashboardLayout,
