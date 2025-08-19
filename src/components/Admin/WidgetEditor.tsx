@@ -1,3 +1,5 @@
+// src/components/Admin/WidgetEditor.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +13,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout, WidgetConfig } from '@/types/dashboard';
-import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique IDs
+import { v4 as uuidv4 } from 'uuid';
+import { useParams, useNavigate } from 'react-router-dom';
+
 
 // Define available widget types and their default props
 const AVAILABLE_WIDGET_TYPES = [
@@ -19,6 +23,12 @@ const AVAILABLE_WIDGET_TYPES = [
   { value: 'BugChart', label: 'Bug Chart', defaultProps: {} },
   { value: 'CustomerSupportTable', label: 'Customer Support Table', defaultProps: {} },
   { value: 'DevelopmentPipeline', label: 'Development Pipeline', defaultProps: {} },
+  { value: 'ImageWidget', label: 'Image Gallery', defaultProps: {} },
+  { value: 'ProgressWidget', label: 'Progress Tracker', defaultProps: {} },
+  { value: 'AnnouncementWidget', label: 'Announcements', defaultProps: {} },
+  { value: 'StatsWidget', label: 'Analytics Dashboard', defaultProps: {} },
+  { value: 'SecurityUpdatesWidget', label: 'Security & Infra Updates', defaultProps: {} },
+  { value: 'SalesChart', label: 'Sales Chart', defaultProps: {} },
 ];
 
 // Map string icon names to LucideReact components for display in the editor
@@ -51,11 +61,24 @@ const METRIC_CARD_TREND_OPTIONS = [
 interface WidgetEditorProps {
   currentLayout: DashboardLayout | null;
   onLayoutSave: () => void; // Callback to refresh dashboard data after saving
+  dashboardName?: string;
+  onDashboardNameChange?: (name: string) => void;
+  dashboardDescription?: string;
+  onDashboardDescriptionChange?: (description: string) => void;
 }
 
-export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLayoutSave }) => {
+export const WidgetEditor: React.FC<WidgetEditorProps> = ({
+  currentLayout,
+  onLayoutSave,
+  dashboardName,
+  onDashboardNameChange,
+  dashboardDescription,
+  onDashboardDescriptionChange
+}) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { dashboardId } = useParams<{ dashboardId: string }>();
+  const navigate = useNavigate();
   const [layoutToEdit, setLayoutToEdit] = useState<DashboardLayout>(currentLayout && currentLayout.widgets ? currentLayout : { widgets: [] });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<WidgetConfig | null>(null);
@@ -75,62 +98,52 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
 
   const handleSaveLayout = async () => {
     if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please log in again.",
-        variant: "destructive"
-      });
-      return;
+        toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
+        return;
     }
+    if (!dashboardId) {
+        toast({ title: "Error", description: "Dashboard ID is missing.", variant: "destructive" });
+        return;
+    }
+
+    const payload = {
+        layout: { widgets: layoutToEdit.widgets },
+        dashboard_name: dashboardName,
+        dashboard_description: dashboardDescription,
+        user_id: user.id
+    };
 
     try {
-      // Check if a layout already exists for the user
-      const { data: existingLayout, error: fetchError } = await supabase
-        .from('dashboard_layout')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
+        if (dashboardId === 'new') {
+            const { data, error } = await supabase
+              .from('dashboard_layout')
+              .insert(payload)
+              .select('id')
+              .single();
 
-      if (fetchError) {
-        throw fetchError;
-      }
+            if (error) throw error;
 
-      if (existingLayout && existingLayout.length > 0) {
-        // Update existing layout
-        const { error: updateError } = await supabase
-          .from('dashboard_layout')
-          .update({ layout: layoutToEdit })
-          .eq('id', existingLayout[0].id);
+            toast({ title: "Success", description: "Dashboard created successfully!" });
+            navigate(`/dashboard/editor/${data.id}`, { replace: true });
+            onLayoutSave();
 
-        if (updateError) throw updateError;
-      } else {
-        // Insert new layout
-        const { error: insertError } = await supabase
-          .from('dashboard_layout')
-          .insert({ 
-            user_id: user.id, // Ensure user_id is included in the insert payload
-            layout: layoutToEdit, 
-            is_default: false 
-          });
+        } else {
+            const { error } = await supabase
+              .from('dashboard_layout')
+              .update(payload)
+              .eq('id', dashboardId);
 
-        if (insertError) throw insertError;
-      }
-
-      toast({
-        title: "Success",
-        description: "Dashboard layout saved successfully!",
-      });
-      onLayoutSave(); // Refresh data on dashboard
-      setIsDialogOpen(false);
+            if (error) throw error;
+            toast({ title: "Success", description: "Dashboard layout saved successfully!" });
+            onLayoutSave();
+        }
     } catch (error) {
-      console.error("Error saving layout:", error);
-      toast({
-        title: "Error",
-        description: `Failed to save layout: ${error instanceof Error ? error.message : String(error)}`,
-        variant: "destructive"
-      });
+        console.error("Error saving layout:", error);
+        toast({ title: "Error", description: `Failed to save layout: ${error instanceof Error ? error.message : String(error)}`, variant: "destructive" });
     }
   };
+
+
   const handleAddWidget = () => {
     const newWidget: WidgetConfig = {
       id: uuidv4(),
@@ -141,7 +154,8 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
       layout: newWidgetForm.layout || { x: 0, y: 0, w: 1, h: 1 },
     };
     setLayoutToEdit(prev => ({
-      widgets: [...prev.widgets, newWidget]
+      ...prev,
+      widgets: [...(prev.widgets || []), newWidget]
     }));
     setNewWidgetForm({
       component: 'MetricCard',
@@ -157,6 +171,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
     if (!editingWidget) return;
 
     setLayoutToEdit(prev => ({
+      ...prev,
       widgets: prev.widgets.map(w =>
         w.id === editingWidget.id ? editingWidget : w
       )
@@ -167,6 +182,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
 
   const handleDeleteWidget = (id: string) => {
     setLayoutToEdit(prev => ({
+      ...prev,
       widgets: prev.widgets.filter(w => w.id !== id)
     }));
     toast({
@@ -236,54 +252,26 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
   };
 
   const handleSelectChange = (id: string, value: string) => {
-    if (editingWidget) {
-      if (id === 'component') {
-        const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
-        setEditingWidget(prev => ({
-          ...prev!,
-          component: value as any,
-          props: newComponentType?.defaultProps || {}, // Reset props when component type changes
-        }));
-      } else if (id.startsWith('props.')) {
-        const propKey = id.split('.')[1];
-        setEditingWidget(prev => ({
-          ...prev!,
-          props: { ...prev!.props, [propKey]: value },
-        }));
-      } else if (id.startsWith('layout.')) {
-        const layoutKey = id.split('.')[1];
-        setEditingWidget(prev => ({
-          ...prev!,
-          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
-        }));
-      } else {
-        setEditingWidget(prev => ({ ...prev!, [id]: value }));
-      }
-    } else {
-      if (id === 'component') {
-        const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          component: value as any,
-          props: newComponentType?.defaultProps || {},
-        }));
-      } else if (id.startsWith('props.')) {
-        const propKey = id.split('.')[1];
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          props: { ...prev!.props, [propKey]: value },
-        }));
-      } else if (id.startsWith('layout.')) {
-        const layoutKey = id.split('.')[1];
-        setNewWidgetForm(prev => ({
-          ...prev!,
-          layout: { ...prev!.layout, [layoutKey]: parseInt(value) },
-        }));
-      } else {
-        setNewWidgetForm(prev => ({ ...prev!, [id]: value }));
-      }
-    }
-  };
+    const stateSetter = editingWidget ? setEditingWidget : setNewWidgetForm;
+
+    stateSetter(prev => {
+        const newFormState = { ...prev! };
+        if (id === 'component') {
+            const newComponentType = AVAILABLE_WIDGET_TYPES.find(w => w.value === value);
+            newFormState.component = value as any;
+            newFormState.props = newComponentType?.defaultProps || {};
+        } else if (id.startsWith('props.')) {
+            const propKey = id.split('.')[1];
+            newFormState.props = { ...newFormState.props, [propKey]: value };
+        } else if (id.startsWith('layout.')) {
+            const layoutKey = id.split('.')[1];
+            newFormState.layout = { ...newFormState.layout, [layoutKey]: parseInt(value) };
+        } else {
+            (newFormState as any)[id] = value;
+        }
+        return newFormState;
+    });
+};
 
   const currentFormState = editingWidget || newWidgetForm;
   const isMetricCard = currentFormState.component === 'MetricCard';
@@ -301,6 +289,25 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="dashboardName">Dashboard Title</Label>
+            <Input
+              id="dashboardName"
+              value={dashboardName}
+              onChange={(e) => onDashboardNameChange?.(e.target.value)}
+              placeholder="Enter dashboard title"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dashboardDescription">Dashboard Subtitle</Label>
+            <Input
+              id="dashboardDescription"
+              value={dashboardDescription}
+              onChange={(e) => onDashboardDescriptionChange?.(e.target.value)}
+              placeholder="Enter dashboard subtitle (optional)"
+            />
+          </div>
+
           <div className="flex justify-end gap-2">
             <Button onClick={openAddDialog} variant="outline">
               <Plus className="w-4 h-4 mr-2" /> Add New Widget

@@ -27,11 +27,11 @@ export const SignupForm: React.FC = () => {
     }
 
     // Updated password validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
+
 
     const result = await signup(email, password, name);
     

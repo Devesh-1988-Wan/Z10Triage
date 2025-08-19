@@ -1,14 +1,17 @@
+// src/pages/DashboardHub.tsx
+
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, AlertCircle, Share2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 
-// This interface would need to be added to your types/dashboard.ts file
 interface DashboardListItem {
   id: string;
   dashboard_name: string;
@@ -17,10 +20,10 @@ interface DashboardListItem {
 
 export const DashboardHub: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [dashboards, setDashboards] = useState<DashboardListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -28,8 +31,6 @@ export const DashboardHub: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        // This query assumes you have updated the schema to allow multiple dashboards per user
-        // and added a 'dashboard_name' column.
         const { data, error } = await supabase
           .from('dashboard_layout')
           .select('id, dashboard_name, updated_at')
@@ -46,6 +47,49 @@ export const DashboardHub: React.FC = () => {
       fetchDashboards();
     }
   }, [user]);
+
+  const handleShare = async (dashboardId: string) => {
+    try {
+      let { data: existingShare, error: fetchError } = await supabase
+        .from('shared_dashboards')
+        .select('public_url_key')
+        .eq('dashboard_id', dashboardId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: no rows found
+        throw fetchError;
+      }
+
+      let shareKey = existingShare?.public_url_key;
+
+      if (!shareKey) {
+        shareKey = uuidv4();
+        const { error: insertError } = await supabase
+          .from('shared_dashboards')
+          .insert({
+            dashboard_id: dashboardId,
+            public_url_key: shareKey,
+            is_public: true,
+          });
+        if (insertError) throw insertError;
+      }
+
+      const shareUrl = `${window.location.origin}/public/dashboard/${shareKey}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Share Link Copied!",
+        description: "The public link to your dashboard has been copied to your clipboard.",
+      });
+
+    } catch (error) {
+      console.error("Error generating share link:", error);
+      toast({
+        title: "Error",
+        description: "Could not generate a share link for this dashboard.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleExportPdf = () => {
     alert("Please select a dashboard to export.");
@@ -86,6 +130,9 @@ export const DashboardHub: React.FC = () => {
               </Button>
               <Button asChild variant="outline" className="flex-1">
                 <Link to={`/dashboard/editor/${dashboard.id}`}>Edit</Link>
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => handleShare(dashboard.id)}>
+                <Share2 className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
