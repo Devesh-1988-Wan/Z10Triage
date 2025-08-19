@@ -78,11 +78,7 @@ const typeColors = {
   task: 'bg-muted text-muted-foreground'
 };
 
-interface DevelopmentPipelineProps {
-  developmentTickets: DevelopmentTicket[];
-}
-
-export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ developmentTickets }) => {
+export const DevelopmentPipeline: React.FC = () => {
   const getProgressPercentage = (actual: number, estimated: number) => {
     return Math.min((actual / estimated) * 100, 100);
   };
@@ -95,7 +91,7 @@ export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ develo
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {developmentTickets.length > 0 ? developmentTickets.map((ticket) => (
+          {mockDevelopmentTickets.map((ticket) => (
             <div key={ticket.id} className="border border-border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
@@ -135,11 +131,7 @@ export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ develo
                 </div>
               )}
             </div>
-          )) : (
-            <div className="text-center text-muted-foreground py-8">
-              No development tickets found
-            </div>
-          )}
+          ))}
         </div>
       </CardContent>
     </Card>

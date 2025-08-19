@@ -3,8 +3,6 @@ import { MetricCard } from './MetricCard';
 import { BugChart } from './BugChart';
 import { CustomerSupportTable } from './CustomerSupportTable';
 import { DevelopmentPipeline } from './DevelopmentPipeline';
-import { DataManagement } from './DataManagement';
-import { SecurityInfrastructureUpdates } from './SecurityInfrastructureUpdates';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,10 +20,9 @@ interface WidgetRendererProps {
     developmentTickets: DevelopmentTicket[];
     dashboardMetrics: DashboardMetrics | null;
   };
-  onDataUpdate?: () => void;
 }
 
-export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, onDataUpdate }) => {
+export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) => {
   const { component, title, description, props } = config;
 
   // Render a generic card wrapper for all widgets to maintain consistent styling
@@ -52,17 +49,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data, on
         return <CustomerSupportTable customerTickets={data.customerTickets} />;
       case 'DevelopmentPipeline':
         return <DevelopmentPipeline developmentTickets={data.developmentTickets} />;
-      case 'DataManagement':
-        return (
-          <DataManagement
-            bugReports={data.bugReports}
-            customerTickets={data.customerTickets}
-            developmentTickets={data.developmentTickets}
-            onDataUpdate={onDataUpdate || (() => {})}
-          />
-        );
-      case 'SecurityInfrastructureUpdates':
-        return <SecurityInfrastructureUpdates />;
       default:
         return (
           <Alert variant="destructive">

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2, Shield } from 'lucide-react';
 
 interface LoginFormProps {
-  onSwitchToReset: () => void;
+  onSwitchToReset?: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToReset }) => {
@@ -18,7 +18,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToReset }) => {
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,81 +29,94 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToReset }) => {
     }
 
     const result = await login(email, password);
-
-    if (result.success) {
+    if (!result.success) {
+      setError(result.error || 'Login failed');
+    } else {
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: "Welcome to Z10 Dashboard",
       });
-      navigate('/dashboard');
-    } else {
-      setError(result.error || 'Invalid email or password');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="login-email">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="login-email"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="pl-10"
-            disabled={isLoading}
-            required
-          />
-        </div>
-      </div>
+    <Card className="shadow-elegant">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
+            <Shield className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Z10 Dashboard</CardTitle>
+          <CardDescription>Sign in to access your dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@z10.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="password123"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-      <div className="space-y-2">
-        <Label htmlFor="login-password">Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="login-password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pl-10"
-            disabled={isLoading}
-            required
-          />
-        </div>
-      </div>
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+          </form>
 
-      <div className="text-right">
-        <Button
-          type="button"
-          variant="link"
-          className="p-0 h-auto text-sm"
-          onClick={onSwitchToReset}
-        >
-          Forgot password?
-        </Button>
-      </div>
+          {onSwitchToReset && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={onSwitchToReset}
+                className="text-sm text-primary hover:text-primary-glow transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing In...
-          </>
-        ) : (
-          'Sign In'
-        )}
-      </Button>
-    </form>
+          <div className="mt-6 pt-4 border-t border-border">
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div><strong>Demo Accounts:</strong></div>
+              <div>Super Admin: superadmin@z10.com</div>
+              <div>Admin: admin@z10.com</div>
+              <div>Viewer: viewer@z10.com</div>
+              <div>Password: password123</div>
+            </div>
+          </div>
+        </CardContent>
+    </Card>
   );
 };
