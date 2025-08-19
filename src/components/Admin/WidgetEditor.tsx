@@ -107,7 +107,11 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
         // Insert new layout
         const { error: insertError } = await supabase
           .from('dashboard_layout')
-          .insert({ user_id: user.id, layout: layoutToEdit, is_default: false }); // User-specific layout is not default
+          .insert({ 
+            user_id: user.id, // Ensure user_id is included in the insert payload
+            layout: layoutToEdit, 
+            is_default: false 
+          });
 
         if (insertError) throw insertError;
       }
@@ -127,7 +131,6 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
       });
     }
   };
-
   const handleAddWidget = () => {
     const newWidget: WidgetConfig = {
       id: uuidv4(),
