@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-<<<<<<< HEAD
-import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout } from '@/types/dashboard';
-import { useAuth } from '@/contexts/AuthContext';
-import { DEFAULT_DASHBOARD_LAYOUT } from '@/config/dashboard'; // Moved default layout to a separate file for clarity
-=======
 import { BugReport, CustomerSupportTicket, DevelopmentTicket, SecurityFix, DashboardMetrics, DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { useAuth } from '@/contexts/AuthContext'; // Import useAuth to get user ID
 
@@ -175,7 +170,6 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   ],
 };
 
->>>>>>> parent of 73404c4 (update)
 
 export const useDashboardData = () => {
   const { user } = useAuth();
@@ -229,13 +223,11 @@ export const useDashboardData = () => {
       if (securityFixesRes.error) throw securityFixesRes.error;
       if (metricsRes.error) throw metricsRes.error;
       
-      // ... (all your data mapping logic remains the same)
-      // For brevity, I'm omitting the large mapping blocks as they don't change.
-      setBugReports(bugReportsRes.data.map(/* ... */));
-      setCustomerTickets(customerTicketsRes.data.map(/* ... */));
-      setDevelopmentTickets(developmentTicketsRes.data.map(/* ... */));
-      setSecurityFixes(securityFixesRes.data.map(/* ... */));
-      setDashboardMetrics(metricsRes.data /* map your metrics here */);
+      setBugReports(bugReportsRes.data.map((report: any) => ({ ...report, createdAt: new Date(report.created_at), updatedAt: new Date(report.updated_at) })));
+      setCustomerTickets(customerTicketsRes.data.map((ticket: any) => ({ ...ticket, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) })));
+      setDevelopmentTickets(developmentTicketsRes.data.map((ticket: any) => ({ ...ticket, createdAt: new Date(ticket.created_at), updatedAt: new Date(ticket.updated_at) })));
+      setSecurityFixes(securityFixesRes.data.map((fix: any) => ({ ...fix, createdAt: new Date(fix.created_at), updatedAt: new Date(fix.updated_at) })));
+      setDashboardMetrics(metricsRes.data);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
@@ -246,7 +238,7 @@ export const useDashboardData = () => {
 
   useEffect(() => {
     fetchData();
-  }, [user?.id]); // ✅ CHANGED: Dependency is now user?.id. This is stable and prevents refetching on window focus.
+  }, [user?.id]);
 
   return {
     dashboardLayout,
