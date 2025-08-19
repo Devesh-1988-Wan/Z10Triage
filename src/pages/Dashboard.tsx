@@ -1,246 +1,258 @@
-// src/pages/Dashboard.tsx
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout as DashboardLayoutComponent } from '@/components/DashboardLayout';
+import React, { useEffect, useState } from 'react';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { generatePDF } from '@/utils/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, Settings, Plus, LayoutTemplate, Download, Play, Eye } from 'lucide-react';
+import { Loader2, AlertCircle, Settings, Plus, LayoutTemplate } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData, DEFAULT_DASHBOARD_LAYOUT } from '@/hooks/useDashboardData';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link, useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { DashboardGrid } from '@/components/widgets/DashboardGrid';
-import { WidgetConfig } from '@/types/dashboard';
-import { WidgetDetailModal } from '@/components/WidgetDetailModal';
-import { GlobalFilters } from '@/components/GlobalFilters';
-import { PresentationControls } from '@/components/PresentationControls';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/autoplay';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
+import { Link, useNavigate } from 'react-router-dom';
+import { AdminForms } from '@/components/AdminForms';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const { dashboardId } = useParams<{ dashboardId: string }>();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const {
     dashboardLayout,
-    setDashboardLayout,
     bugReports,
     customerTickets,
     developmentTickets,
     dashboardMetrics,
-    widgetContent,
     isLoading: isDataLoading,
     error,
     refetch,
-    dateRange,
-    setDateRange,
-  } = useDashboardData(dashboardId);
+  } = useDashboardData();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSavingDefault, setIsSavingDefault] = useState(false);
-  const [selectedWidget, setSelectedWidget] = useState<WidgetConfig | null>(null);
-  const [presentationMode, setPresentationMode] = useState<'none' | 'slideshow' | 'focus'>('none');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [interval, setInterval] = useState(5);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [swiperInstance, setSwiperInstance] = useState<any>(null);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const hasWidgets = dashboardLayout && dashboardLayout.widgets.length > 0;
 
-  const handleLayoutChange = (newLayout: any[]) => {
-    if (dashboardLayout) {
-      const updatedWidgets = dashboardLayout.widgets.map(widget => {
-        const layoutItem = newLayout.find(l => l.i === widget.id);
-        return layoutItem ? { ...widget, layout: layoutItem } : widget;
+  const handleExportPdf = async () => {
+    try {
+      await generatePDF('dashboard-content', 'z10-dashboard-report');
+      toast({
+        title: 'PDF Generated',
+        description: 'Dashboard report has been downloaded successfully',
       });
-      setDashboardLayout({ ...dashboardLayout, widgets: updatedWidgets });
-    }
-  };
-
-  const handleUpdateWidget = (updatedWidget: WidgetConfig) => {
-    if (dashboardLayout) {
-      const updatedWidgets = dashboardLayout.widgets.map(w => w.id === updatedWidget.id ? updatedWidget : w);
-      setDashboardLayout({ ...dashboardLayout, widgets: updatedWidgets });
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: 'Failed to generate PDF report. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleLoadDefaultLayout = async () => {
-    if (!user || !dashboardId) return;
+    if (!user) return;
     setIsSavingDefault(true);
     try {
-      const { error } = await supabase
+      const { data: existingLayout, error: fetchError } = await supabase
         .from('dashboard_layout')
-        .update({ layout: DEFAULT_DASHBOARD_LAYOUT })
-        .eq('id', dashboardId);
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) throw error;
-      toast({ title: "Default Layout Loaded" });
-      refetch();
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: no rows found
+        throw fetchError;
+      }
+
+      if (existingLayout) {
+        const { error: updateError } = await supabase
+          .from('dashboard_layout')
+          .update({ layout: DEFAULT_DASHBOARD_LAYOUT })
+          .eq('id', existingLayout.id);
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('dashboard_layout')
+          .insert({ user_id: user.id, layout: DEFAULT_DASHBOARD_LAYOUT, is_default: false });
+        if (insertError) throw insertError;
+      }
+
+      toast({
+        title: "Default Layout Loaded",
+        description: "The default widget layout has been applied to your dashboard.",
+      });
+      refetch(); // Refresh dashboard data to show the new layout
     } catch (error) {
-      toast({ title: "Error", description: `Failed to load default layout: ${error instanceof Error ? error.message : String(error)}`, variant: "destructive" });
+      console.error("Error saving default layout:", error);
+      toast({
+        title: "Error",
+        description: `Failed to load default layout: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive",
+      });
     } finally {
       setIsSavingDefault(false);
     }
   };
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  const handlePlayPause = () => {
-    if(swiperInstance) {
-      if(isPlaying) {
-        swiperInstance.autoplay.stop();
-      } else {
-        swiperInstance.autoplay.start();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  if (isDataLoading) {
+  if (isAuthLoading || isDataLoading) {
     return (
-      <DashboardLayoutComponent onExportPdf={() => {}}>
+      <DashboardLayout onExportPdf={handleExportPdf}>
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
-      </DashboardLayoutComponent>
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayoutComponent onExportPdf={() => {}}>
-        <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
-      </DashboardLayoutComponent>
+      <DashboardLayout onExportPdf={handleExportPdf}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Alert variant="destructive" className="w-full max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load dashboard data. Please try again later.
+              <br />
+              {error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </DashboardLayout>
     );
   }
-  
-  const renderDashboardContent = () => {
-    if (presentationMode === 'slideshow') {
-      return (
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={50}
-          slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: interval * 1000, disableOnInteraction: false }}
-          onSwiper={setSwiperInstance}
-        >
-          {dashboardLayout?.widgets.map((widgetConfig) => (
-            <SwiperSlide key={widgetConfig.id}>
-              <div className="p-4 h-[70vh] flex items-center justify-center">
-                <WidgetRenderer config={widgetConfig} data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }} isEditable={false} onUpdate={() => {}} onClick={() => {}} />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      );
-    }
-
-    if (hasWidgets) {
-      return (
-        <DashboardGrid
-          layout={dashboardLayout.widgets}
-          onLayoutChange={handleLayoutChange}
-          isDraggable={false}
-          data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }}
-          onWidgetClick={setSelectedWidget}
-          onUpdateWidget={handleUpdateWidget}
-        />
-      );
-    }
-
-    return (
-      <Card className="shadow-card">
-        <CardContent className="pt-6 text-center">
-          {isAdmin ? (
-            <div className="space-y-4 max-w-lg mx-auto py-8">
-              <LayoutTemplate className="w-16 h-16 mx-auto text-muted-foreground" />
-              <h2 className="text-2xl font-semibold">Your Dashboard is Empty</h2>
-              <p className="text-muted-foreground">
-                You can start by creating a custom layout from scratch or by loading our recommended default layout.
-              </p>
-              <div className="flex justify-center gap-4 pt-4">
-                <Button asChild><Link to={`/dashboard/editor/${dashboardId}`}><Plus className="w-4 h-4 mr-2" />Start with a Blank Canvas</Link></Button>
-                <Button variant="outline" onClick={handleLoadDefaultLayout} disabled={isSavingDefault}>
-                  {isSavingDefault ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-                  Load Default Layout
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No widgets have been configured for this dashboard. Please contact an administrator.</p>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
-
 
   return (
-    <DashboardLayoutComponent onExportPdf={() => {}}>
+    <DashboardLayout onExportPdf={handleExportPdf}>
       <div id="dashboard-content" className="space-y-6">
+        {/* Header Section */}
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">{dashboardLayout?.name || 'Dashboard'}</h1>
-            <p className="text-muted-foreground">{dashboardLayout?.description || 'Overview'}</p>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Z10 Updates - August 13, 2025
+            </h1>
+            <p className="text-muted-foreground">
+              Development progress, bug tracking, and customer support overview
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <GlobalFilters dateRange={dateRange} setDateRange={setDateRange} />
-            {hasWidgets && (
-              <>
-                <Button variant="outline" onClick={() => setPresentationMode(presentationMode === 'slideshow' ? 'none' : 'slideshow')}>
-                  <Play className="w-4 h-4 mr-2" />
-                  {presentationMode === 'slideshow' ? 'Exit Slideshow' : 'Slideshow'}
-                </Button>
-                {presentationMode === 'slideshow' && (
-                  <PresentationControls
-                    isPlaying={isPlaying}
-                    onPlayPause={handlePlayPause}
-                    onNext={() => swiperInstance?.slideNext()}
-                    interval={interval}
-                    onIntervalChange={setInterval}
-                    isFullscreen={isFullscreen}
-                    onToggleFullscreen={toggleFullscreen}
-                  />
-                )}
-              </>
-            )}
-            {isAdmin && (
-              <Button asChild variant="outline">
-                <Link to={`/dashboard/editor/${dashboardId}`}><Settings className="w-4 h-4 mr-2" />Customize</Link>
-              </Button>
-            )}
+          {isAdmin && (
+            <Button asChild variant="outline">
+              <Link to="/dashboard/editor">
+                <Settings className="w-4 h-4 mr-2" />
+                Customize Dashboard
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* Dynamic Widget Rendering */}
+        {hasWidgets ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {dashboardLayout.widgets.map((widgetConfig) => (
+              <div
+                key={widgetConfig.id}
+                className={cn(`col-span-${widgetConfig.layout.w}`)}
+              >
+                <WidgetRenderer
+                  config={widgetConfig}
+                  data={{
+                    bugReports,
+                    customerTickets,
+                    developmentTickets,
+                    dashboardMetrics,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Card className="shadow-card">
+            <CardContent className="pt-6 text-center">
+              {isAdmin ? (
+                <div className="space-y-4 max-w-lg mx-auto py-8">
+                  <LayoutTemplate className="w-16 h-16 mx-auto text-muted-foreground" />
+                  <h2 className="text-2xl font-semibold">Your Dashboard is Empty</h2>
+                  <p className="text-muted-foreground">
+                    You can start by creating a custom layout from scratch or by loading our recommended default layout.
+                  </p>
+                  <div className="flex justify-center gap-4 pt-4">
+                    <Button asChild>
+                      <Link to="/dashboard/editor">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Start with a Blank Canvas
+                      </Link>
+                    </Button>
+                    <Button variant="outline" onClick={handleLoadDefaultLayout} disabled={isSavingDefault}>
+                      {isSavingDefault ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 mr-2" />
+                      )}
+                      Load Default Layout
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  No widgets have been configured for this dashboard. Please contact an administrator.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin Forms - Only show for admins */}
+        {isAdmin && (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Data Management
+              </CardTitle>
+              <CardDescription>
+                Create and manage bug reports, customer support tickets, and development tasks
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminForms
+                onDataUpdate={refetch}
+                bugReports={bugReports}
+                customerTickets={customerTickets}
+                developmentTickets={developmentTickets}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Footer Information */}
+        <div className="bg-gradient-card rounded-lg p-6 border border-border">
+          <h3 className="text-lg font-semibold mb-3">Security & Infrastructure Updates</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">Security Fixes - In Progress</h4>
+              <p className="text-muted-foreground">
+                Customer reported vulnerabilities are being addressed with priority fixes.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Commerce Connector 2.0 - 96% Complete</h4>
+              <p className="text-muted-foreground">
+                CC2.0 integration completed with additional requirements implementation.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">GraphQL Phase III</h4>
+              <p className="text-muted-foreground">
+                Development on hold due to bandwidth. Training sessions continue (last session: Aug 20th).
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Hotfix Version 10.2.1.2</h4>
+              <p className="text-muted-foreground">
+                Planned for critical priority tenant tickets across multiple customers.
+              </p>
+            </div>
           </div>
         </div>
-        {renderDashboardContent()}
       </div>
-      <WidgetDetailModal
-        widget={selectedWidget}
-        onOpenChange={(open) => !open && setSelectedWidget(null)}
-        data={{ bugReports, customerTickets, developmentTickets, dashboardMetrics, widgetContent }}
-      />
-    </DashboardLayoutComponent>
+    </DashboardLayout>
   );
 };

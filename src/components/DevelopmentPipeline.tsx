@@ -4,6 +4,65 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { DevelopmentTicket } from '@/types/dashboard';
 
+const mockDevelopmentTickets: DevelopmentTicket[] = [
+  {
+    id: '1',
+    title: 'Returns Implementation',
+    type: 'feature',
+    requestedBy: 'KleenRite',
+    ticketId: 'Z10-16467',
+    status: 'dev_inprogress',
+    priority: 'high',
+    estimatedHours: 40,
+    actualHours: 24,
+    assignee: 'Dev Team A',
+    createdAt: new Date('2024-08-01'),
+    updatedAt: new Date('2024-08-13')
+  },
+  {
+    id: '2',
+    title: 'Refunds (Including Vouchers)',
+    type: 'feature',
+    requestedBy: 'KleenRite',
+    ticketId: 'Z10-16467',
+    status: 'dev_inprogress',
+    priority: 'high',
+    estimatedHours: 35,
+    actualHours: 18,
+    assignee: 'Dev Team B',
+    createdAt: new Date('2024-08-02'),
+    updatedAt: new Date('2024-08-12')
+  },
+  {
+    id: '3',
+    title: 'Recent Web Purchase Feature',
+    type: 'feature',
+    requestedBy: 'KleenRite',
+    ticketId: 'Z10-19193',
+    status: 'dev_inprogress',
+    priority: 'medium',
+    estimatedHours: 20,
+    actualHours: 8,
+    assignee: 'Dev Team C',
+    createdAt: new Date('2024-08-03'),
+    updatedAt: new Date('2024-08-11')
+  },
+  {
+    id: '4',
+    title: 'GraphQL Phase 3',
+    type: 'enhancement',
+    requestedBy: 'Internal',
+    ticketId: 'Z10-GQL-03',
+    status: 'code_review',
+    priority: 'high',
+    estimatedHours: 80,
+    actualHours: 68,
+    assignee: 'GraphQL Team',
+    createdAt: new Date('2024-07-15'),
+    updatedAt: new Date('2024-08-10')
+  }
+];
+
 const statusColors = {
   not_started: 'bg-muted text-muted-foreground',
   dev_inprogress: 'bg-warning text-warning-foreground',
@@ -19,25 +78,20 @@ const typeColors = {
   task: 'bg-muted text-muted-foreground'
 };
 
-interface DevelopmentPipelineProps {
-  developmentTickets?: DevelopmentTicket[];
-}
-
-export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ developmentTickets = [] }) => {
+export const DevelopmentPipeline: React.FC = () => {
   const getProgressPercentage = (actual: number, estimated: number) => {
-    if (!estimated) return 0;
     return Math.min((actual / estimated) * 100, 100);
   };
 
   return (
     <Card className="shadow-card">
       <CardHeader>
-        <CardTitle>Development Pipeline</CardTitle>
-        <CardDescription>Current development tasks and their progress</CardDescription>
+        <CardTitle>Development Pipeline - August Priorities</CardTitle>
+        <CardDescription>38 tickets currently in development pipeline</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {developmentTickets.map((ticket) => (
+          {mockDevelopmentTickets.map((ticket) => (
             <div key={ticket.id} className="border border-border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">

@@ -108,7 +108,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToReset }) => {
           )}
 
           <div className="mt-6 pt-4 border-t border-border">
-         </div>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div><strong>Demo Accounts:</strong></div>
+              <div>Super Admin: superadmin@z10.com</div>
+              <div>Admin: admin@z10.com</div>
+              <div>Viewer: viewer@z10.com</div>
+              <div>Password: password123</div>
+            </div>
+          </div>
         </CardContent>
     </Card>
   );
