@@ -67,27 +67,6 @@ export const WidgetEditorPage: React.FC = () => {
           onLayoutSave={refetch}
         />
       </div>
-              {/* Admin Forms - Only show for admins */}
-        {isAdmin && (
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Data Management
-              </CardTitle>
-              <CardDescription>
-                Create and manage bug reports, customer support tickets, and development tasks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminForms
-                onDataUpdate={refetch}
-                bugReports={bugReports}
-                customerTickets={customerTickets}
-                developmentTickets={developmentTickets}
-              />
-            </CardContent>
-          </Card>
-        )}
     </DashboardLayout>
   );
 };
