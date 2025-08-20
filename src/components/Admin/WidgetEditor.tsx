@@ -77,7 +77,7 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
     if (!user?.id) {
       toast({
         title: "Error",
-        description: "User not authenticated.",
+        description: "User not authenticated. Please log in again.",
         variant: "destructive"
       });
       return;
@@ -89,18 +89,18 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
         .from('dashboard_layout')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .limit(1);
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+      if (fetchError) {
         throw fetchError;
       }
 
-      if (existingLayout) {
+      if (existingLayout && existingLayout.length > 0) {
         // Update existing layout
         const { error: updateError } = await supabase
           .from('dashboard_layout')
           .update({ layout: layoutToEdit })
-          .eq('id', existingLayout.id);
+          .eq('id', existingLayout[0].id);
 
         if (updateError) throw updateError;
       } else {

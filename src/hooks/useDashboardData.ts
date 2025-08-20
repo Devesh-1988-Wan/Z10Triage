@@ -12,6 +12,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Bugs Fixed This Week',
       description: 'Marked as Dev Done',
       props: {
+        valueKey: 'totalBugsFixed',
         icon: 'Bug',
         change: { value: '+18%', trend: 'up' },
       },
@@ -23,6 +24,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Total Tickets Resolved',
       description: 'Including Tasks/Stories/Bugs',
       props: {
+        valueKey: 'totalTicketsResolved',
         icon: 'TrendingUp',
         change: { value: '+12%', trend: 'up' },
       },
@@ -34,6 +36,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Blocker Bugs',
       description: 'Highest priority issues',
       props: {
+        valueKey: 'blockerBugs',
         icon: 'Shield',
         priority: 'blocker',
       },
@@ -45,6 +48,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Critical Bugs',
       description: 'Requires immediate attention',
       props: {
+        valueKey: 'criticalBugs',
         icon: 'Bug',
         priority: 'critical',
       },
@@ -56,6 +60,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'High Priority Bugs',
       description: 'Important but not critical',
       props: {
+        valueKey: 'highPriorityBugs',
         icon: 'Clock',
         priority: 'high',
       },
@@ -67,6 +72,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
       title: 'Active Customer Support',
       description: 'Live & WIP tickets',
       props: {
+        valueKey: 'activeCustomerSupport',
         icon: 'Users',
       },
       layout: { x: 5, y: 0, w: 1, h: 1 },
@@ -189,9 +195,8 @@ export const useDashboardData = () => {
         if (defaultLayout && defaultLayout.length > 0) {
           currentLayout = defaultLayout[0].layout as unknown as DashboardLayout;
         } else {
-          // If no user-specific and no default layout in DB, we'll return an empty layout.
-          // The Dashboard component will handle showing the options to the admin.
-          currentLayout = { widgets: [] };
+          // Fallback to the hardcoded default layout if no layout is found in the database
+          currentLayout = DEFAULT_DASHBOARD_LAYOUT;
         }
       }
       
