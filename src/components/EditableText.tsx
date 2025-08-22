@@ -27,7 +27,9 @@ export const EditableText: React.FC<EditableTextProps> = ({
   }, [initialValue]);
 
   const handleBlur = () => {
-    onSave(value);
+    if (value !== initialValue) {
+      onSave(value);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -35,13 +37,18 @@ export const EditableText: React.FC<EditableTextProps> = ({
   };
 
   if (!isEditing) {
-    return <span className={className}>{value}</span>;
+    return as === 'textarea' ? <p className={className}>{value}</p> : <h1 className={className}>{value}</h1>;
   }
 
   const commonProps = {
     value,
     onChange: handleChange,
     onBlur: handleBlur,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && as === 'input') {
+        (e.target as HTMLInputElement).blur();
+      }
+    },
     className: inputClassName,
     autoFocus: true,
   };
