@@ -18,7 +18,6 @@ export const PublicDashboard: React.FC = () => {
     customerTickets,
     developmentTickets,
     dashboardMetrics,
-    widgetContent,
   } = useDashboardData();
 
   useEffect(() => {
@@ -38,7 +37,7 @@ export const PublicDashboard: React.FC = () => {
       if (error || !data) {
         setError('Dashboard not found or access denied.');
       } else {
-        setLayout(data.dashboard_layout.layout as DashboardLayout);
+        setLayout((data as any).dashboard_layout?.layout as DashboardLayout);
       }
       setLoading(false);
     };
@@ -74,7 +73,6 @@ export const PublicDashboard: React.FC = () => {
                 customerTickets,
                 developmentTickets,
                 dashboardMetrics,
-                widgetContent,
               }}
             />
           </div>

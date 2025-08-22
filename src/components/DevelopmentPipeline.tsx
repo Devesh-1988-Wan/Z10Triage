@@ -78,7 +78,12 @@ const typeColors = {
   task: 'bg-muted text-muted-foreground'
 };
 
-export const DevelopmentPipeline: React.FC = () => {
+interface DevelopmentPipelineProps {
+  developmentTickets?: DevelopmentTicket[];
+}
+
+export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ developmentTickets }) => {
+  const tickets = developmentTickets || mockDevelopmentTickets;
   const getProgressPercentage = (actual: number, estimated: number) => {
     return Math.min((actual / estimated) * 100, 100);
   };
@@ -91,7 +96,7 @@ export const DevelopmentPipeline: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {mockDevelopmentTickets.map((ticket) => (
+          {tickets.map((ticket) => (
             <div key={ticket.id} className="border border-border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">

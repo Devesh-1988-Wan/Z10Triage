@@ -86,7 +86,7 @@ export const WidgetComments: React.FC<WidgetCommentsProps> = ({ isOpen, onClose,
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Add a comment..."
           />
-          <Button onClick={handleAddComment} disabled={addCommentMutation.isLoading}>
+          <Button onClick={handleAddComment} disabled={addCommentMutation.isPending}>
             Send
           </Button>
         </div>

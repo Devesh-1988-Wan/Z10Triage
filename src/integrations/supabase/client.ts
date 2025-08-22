@@ -1,12 +1,8 @@
-// src/integrations/supabase/client.ts
-
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
 
 // --- Environment Variable Loading ---
-// Use `import.meta.env` for Vite-based projects (Vite, SvelteKit, Astro)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://wpqcdhyhymtsvzmnrgud.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwcWNkaHloeW10c3Z6bW5yZ3VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNzY3NzUsImV4cCI6MjA3MDY1Mjc3NX0.M_W0k7lkh4qu6xlg1PC8HAMo54mC7ozw7x-Y5bed3Uc';
 
 // For other frameworks like Next.js, you would use:
 // const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,12 +17,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // --- Client Initialization ---
 // Create and export the Supabase client as a singleton instance.
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     // Using localStorage is standard for web clients.
     storage: localStorage,
-    // These are the recommended defaults, so they are good to keep.
+    // These are the recommended defaults for persistent sessions
     persistSession: true,
-    autoRefreshToken: false,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    // Add retry logic for failed token refreshes
+    flowType: 'pkce'
   }
 });

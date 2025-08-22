@@ -42,6 +42,16 @@ const Index = () => {
           >
             Get Started
           </Button>
+          {!user && (
+            <Button 
+              onClick={() => navigate('/editor')}
+              size="lg"
+              variant="outline"
+              className="px-8 py-3 text-lg"
+            >
+              Try Dashboard Builder
+            </Button>
+          )}
         </div>
       </div>
     </div>

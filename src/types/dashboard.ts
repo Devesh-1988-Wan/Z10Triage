@@ -47,6 +47,7 @@ export interface DevelopmentTicket {
 }
 
 export interface DashboardMetrics {
+  id?: string;
   totalBugsFixed: number;
   totalTicketsResolved: number;
   blockerBugs: number;
@@ -54,6 +55,10 @@ export interface DashboardMetrics {
   highPriorityBugs: number;
   activeCustomerSupport: number;
   developmentProgress: number;
+  functionalStability?: number;
+  performance?: number;
+  queries?: number;
+  lookFeel?: number;
 }
 
 export interface SecurityFix {
@@ -71,7 +76,7 @@ export interface SecurityFix {
 // NEW: Define a type for a single widget's configuration
 export interface WidgetConfig {
   id: string; // Unique ID for the widget instance
-  component: 'MetricCard' | 'BugChart' | 'CustomerSupportTable' | 'DevelopmentPipeline'; // The React component name
+  component: 'MetricCard' | 'BugChart' | 'CustomerSupportTable' | 'DevelopmentPipeline' | 'DataManagement' | 'SecurityInfrastructureUpdates'; // The React component name
   title: string; // Title for the widget
   description?: string; // Optional description
   props: Record<string, any>; // Props specific to the component

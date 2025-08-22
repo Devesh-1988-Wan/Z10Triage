@@ -27,7 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const handleUserSession = async (session: Session | null) => {
+      if (!mounted) return;
+      
       if (session?.user) {
         try {
           const { data: profile, error } = await supabase
@@ -36,51 +40,99 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('user_id', session.user.id)
             .single();
 
-          if (error) {
-            console.error('Error fetching user profile:', error);
-            setUser(null);
-          } else {
-            setUser({
-              id: session.user.id,
-              email: profile.email,
-              role: profile.role as 'super_admin' | 'admin' | 'viewer',
-              name: profile.name
-            });
+          if (mounted) {
+            if (error) {
+              console.error('Error fetching user profile:', error);
+              setUser(null);
+            } else {
+              setUser({
+                id: session.user.id,
+                email: profile.email,
+                role: profile.role as 'super_admin' | 'admin' | 'viewer',
+                name: profile.name
+              });
+            }
           }
         } catch (err) {
           console.error('Error fetching user profile:', err);
-          setUser(null);
+          if (mounted) setUser(null);
         }
       } else {
-        setUser(null);
+        if (mounted) setUser(null);
       }
-      // Ensure isLoading is set to false after handling the session
-      setIsLoading(false);
+      
+      if (mounted) setIsLoading(false);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // It's important to handle the loading state here as well for real-time updates
-      setIsLoading(true);
+      if (!mounted) return;
+      
+      console.log('Auth state change:', event, session?.user?.id);
+      
+      // Handle specific auth events
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
+        return;
+      } else if (event === 'SIGNED_IN') {
+        console.log('User signed in');
+        setIsLoading(true);
+      }
+      
       await handleUserSession(session);
     });
     
-    // Initial check on component mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleUserSession(session);
-    }).catch(() => {
-      // Also handle potential errors during session fetching
-      setIsLoading(false);
-    });
+    // Initial session check
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          // If there's an error getting the session, try to refresh
+          if (error.message.includes('refresh_token_not_found')) {
+            console.log('Refresh token not found, clearing auth state');
+            await supabase.auth.signOut();
+          }
+        }
+        await handleUserSession(session);
+      } catch (err) {
+        console.error('Error initializing auth:', err);
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    // The onAuthStateChange listener will handle setting the user and final loading state
-    if (error) setIsLoading(false);
-    return { success: !error, error: error?.message };
+    try {
+      // Clear any existing session first
+      await supabase.auth.signOut();
+      
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err.message || 'Login failed' };
+    }
   };
 
   const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
@@ -97,9 +149,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async (): Promise<void> => {
     setIsLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsLoading(false);
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+      setUser(null);
+    } catch (err) {
+      console.error('Error during logout:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {

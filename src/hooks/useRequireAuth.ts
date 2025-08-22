@@ -4,14 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // Redirect to /login if user is not signed in
 export function useRequireAuth() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/login");
+    if (!isLoading && !user) {
+      navigate("/auth");
     }
-  }, [user, loading, navigate]);
+  }, [user, isLoading, navigate]);
 
-  return { user, loading };
+  return { user, isLoading };
 }
