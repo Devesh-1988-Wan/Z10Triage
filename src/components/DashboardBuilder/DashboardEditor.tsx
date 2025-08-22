@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Trash2, Edit3, Plus, Save, Eye, Settings } from 'lucide-react';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
@@ -19,12 +20,14 @@ interface DashboardEditorProps {
 }
 
 const AVAILABLE_WIDGETS = [
-  { id: 'MetricCard', name: 'Metric Card', icon: '投' },
-  { id: 'BugChart', name: 'Bug Chart', icon: '菅' },
-  { id: 'CustomerSupportTable', name: 'Support Table', icon: '則' },
-  { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: '噫' },
-  { id: 'DataManagement', name: 'Data Management', icon: '沈' },
-  { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: '柏' },
+    { id: 'MetricCard', name: 'Metric Card', icon: '📊' },
+    { id: 'BugChart', name: 'Bug Chart', icon: '🐞' },
+    { id: 'CustomerSupportTable', name: 'Support Table', icon: '👥' },
+    { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: '🚀' },
+    { id: 'DataManagement', name: 'Data Management', icon: '💾' },
+    { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: '🛡️' },
+    { id: 'HeaderWidget', name: 'Header', icon: 'T' },
+    { id: 'InfoCardWidget', name: 'Info Card', icon: 'ℹ️' },
 ];
 
 export const DashboardEditor: React.FC<DashboardEditorProps> = ({
@@ -205,6 +208,50 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
                             })}
                           />
                         </div>
+                        {editingWidget?.component === 'InfoCardWidget' && (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Heading</Label>
+                                    <Input
+                                        value={editingWidget.props.heading || ''}
+                                        onChange={(e) => updateWidget({
+                                            ...editingWidget,
+                                            props: { ...editingWidget.props, heading: e.target.value }
+                                        })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Text</Label>
+                                    <Textarea
+                                        value={editingWidget.props.text || ''}
+                                        onChange={(e) => updateWidget({
+                                            ...editingWidget,
+                                            props: { ...editingWidget.props, text: e.target.value }
+                                        })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Icon Name</Label>
+                                    <Input
+                                        value={editingWidget.props.iconName || ''}
+                                        onChange={(e) => updateWidget({
+                                            ...editingWidget,
+                                            props: { ...editingWidget.props, iconName: e.target.value }
+                                        })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Image URL</Label>
+                                    <Input
+                                        value={editingWidget.props.imageUrl || ''}
+                                        onChange={(e) => updateWidget({
+                                            ...editingWidget,
+                                            props: { ...editingWidget.props, imageUrl: e.target.value }
+                                        })}
+                                    />
+                                </div>
+                            </div>
+                        )}
                       </div>
                       <DialogFooter>
                         <Button type="submit" onClick={() => setEditingWidget(null)}>Save changes</Button>
