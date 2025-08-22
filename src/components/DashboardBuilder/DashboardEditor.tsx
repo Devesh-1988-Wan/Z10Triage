@@ -1,4 +1,4 @@
-import React, 'react';
+import React, { useState } from 'react';
 import GridLayout from 'react-grid-layout';
 import { DashboardLayout, WidgetConfig } from '@/types/dashboard';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ interface DashboardEditorProps {
   onSave?: (layout: DashboardLayout) => void;
 }
 
-// Added new widgets to the available list
 const AVAILABLE_WIDGETS = [
     { id: 'MetricCard', name: 'Metric Card', icon: '📊' },
     { id: 'BugChart', name: 'Bug Chart', icon: '🐞' },
@@ -47,13 +46,11 @@ const AVAILABLE_WIDGETS = [
     { id: 'InfoCardWidget', name: 'Info Card', icon: 'ℹ️' },
 ];
 
-// Default configurations for widgets that need them
 const DEFAULT_PROPS = {
     BugChart: { chartType: 'bar' },
     CustomerSupportTable: { visibleColumns: ['customerName', 'priority', 'status', 'assignee'] },
     DevelopmentPipeline: { stages: ['Not Started', 'In Progress', 'Code Review', 'Testing', 'Completed'] }
 };
-
 
 export const DashboardEditor: React.FC<DashboardEditorProps> = ({
   initialLayout,
@@ -62,13 +59,13 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const dashboardData = useDashboardData();
-  const [layout, setLayout] = React.useState<DashboardLayout>(
+  const [layout, setLayout] = useState<DashboardLayout>(
     initialLayout || { widgets: [] }
   );
-  const [editingWidget, setEditingWidget] = React.useState<WidgetConfig | null>(
+  const [editingWidget, setEditingWidget] = useState<WidgetConfig | null>(
     null
   );
-  const [isPreviewMode, setIsPreviewMode] = React.useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const addWidget = (componentType: keyof typeof DEFAULT_PROPS | string) => {
     const newWidget: WidgetConfig = {
@@ -77,7 +74,7 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
       title: `New ${componentType}`,
       description: '',
       props: DEFAULT_PROPS[componentType as keyof typeof DEFAULT_PROPS] || {},
-      layout: { x: 0, y: 0, w: 4, h: 4 }, // Default size
+      layout: { x: 0, y: 0, w: 4, h: 4 },
     };
 
     setLayout((prev) => ({
@@ -116,7 +113,7 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
     }
   };
 
-  const onLayoutChange = (newLayout: ReactGridLayout.Layout[]) => {
+  const onLayoutChange = (newLayout: any[]) => {
     const updatedWidgets = layout.widgets.map((widget) => {
       const layoutItem = newLayout.find((item) => item.i === widget.id);
       if (layoutItem) {
@@ -297,7 +294,6 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
 
   return (
     <div className="h-full flex bg-muted/40">
-      {/* Sidebar */}
       <aside className="w-80 border-r bg-background p-4 flex flex-col">
         <h3 className="font-semibold mb-4">Available Widgets</h3>
         <div className="grid grid-cols-1 gap-2 overflow-y-auto">
@@ -331,7 +327,6 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
         </div>
       </aside>
 
-      {/* Main Canvas */}
       <main className="flex-1 p-4 overflow-auto">
         <GridLayout
           className="layout"
