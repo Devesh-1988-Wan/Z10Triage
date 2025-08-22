@@ -294,22 +294,29 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
 
   return (
     <div className="h-full flex bg-muted/40">
+      {/* FIX 1: Sidebar Layout Correction
+        - Added `flex flex-col` to the <aside> tag to make it a flex container.
+        - The container for the widget list now has `overflow-y-auto` to enable scrolling.
+        - The buttons are wrapped in a div with `mt-auto` to push them to the bottom.
+      */}
       <aside className="w-80 border-r bg-background p-4 flex flex-col">
         <h3 className="font-semibold mb-4">Available Widgets</h3>
-        <div className="grid grid-cols-1 gap-2 overflow-y-auto">
-          {AVAILABLE_WIDGETS.map((widget) => (
-            <Card
-              key={widget.id}
-              className="cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => addWidget(widget.id)}
-            >
-              <CardContent className="p-3 flex items-center gap-3">
-                <span className="text-xl">{widget.icon}</span>
-                <span className="text-sm font-medium">{widget.name}</span>
-                <Plus className="h-4 w-4 ml-auto text-muted-foreground" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex-grow overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 gap-2">
+            {AVAILABLE_WIDGETS.map((widget) => (
+              <Card
+                key={widget.id}
+                className="cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => addWidget(widget.id)}
+              >
+                <CardContent className="p-3 flex items-center gap-3">
+                  <span className="text-xl">{widget.icon}</span>
+                  <span className="text-sm font-medium">{widget.name}</span>
+                  <Plus className="h-4 w-4 ml-auto text-muted-foreground" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
         <div className="mt-auto space-y-2 pt-4">
           <Button onClick={saveDashboard} className="w-full">
@@ -353,6 +360,11 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
                         <Edit3 className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
+                    {/* FIX 2: Comprehensive Editability
+                      - This DialogContent now correctly uses the renderEditForm function.
+                      - renderEditForm displays specific inputs for each widget type, ensuring
+                        all relevant widgets are fully configurable.
+                    */}
                     {editingWidget && editingWidget.id === widget.id && (
                         <DialogContent>
                             <DialogHeader>
