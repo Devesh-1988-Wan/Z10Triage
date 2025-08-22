@@ -81,6 +81,7 @@ export interface WidgetConfig {
   description?: string; // Optional description
   props: Record<string, any>; // Props specific to the component
   layout: { x: number; y: number; w: number; h: number }; // Grid layout properties (x, y, width, height)
+  dataSource?: 'bugReports' | 'customerTickets' | 'developmentTickets' | 'dashboardMetrics';
 }
 
 // NEW: Define the overall dashboard layout structure
