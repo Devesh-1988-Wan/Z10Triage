@@ -51,23 +51,8 @@ const mockSupportTickets: CustomerSupportTicket[] = [
   }
 ];
 
-const priorityColors = {
-  blocker: 'bg-critical text-critical-foreground',
-  critical: 'bg-destructive text-destructive-foreground',
-  high: 'bg-warning text-warning-foreground',
-  medium: 'bg-primary text-primary-foreground',
-  low: 'bg-muted text-muted-foreground'
-};
-
-const statusColors = {
-  live: 'bg-success text-success-foreground',
-  wip: 'bg-warning text-warning-foreground',
-  pending: 'bg-muted text-muted-foreground',
-  closed: 'bg-muted text-muted-foreground'
-};
-
 interface CustomerSupportTableProps {
-  customerTickets?: any[];
+  customerTickets?: CustomerSupportTicket[];
 }
 
 export const CustomerSupportTable: React.FC<CustomerSupportTableProps> = ({ customerTickets = [] }) => {
@@ -96,12 +81,12 @@ export const CustomerSupportTable: React.FC<CustomerSupportTableProps> = ({ cust
                 <TableCell className="font-medium">{ticket.customerName}</TableCell>
                 <TableCell>{ticket.area}</TableCell>
                 <TableCell>
-                  <Badge className={priorityColors[ticket.priority]}>
+                  <Badge variant={ticket.priority}>
                     {ticket.priority.toUpperCase()}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge className={statusColors[ticket.status]}>
+                  <Badge variant={ticket.status as any}>
                     {ticket.status.toUpperCase()}
                   </Badge>
                 </TableCell>
