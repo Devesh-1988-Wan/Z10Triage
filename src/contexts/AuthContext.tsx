@@ -4,13 +4,12 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { User as DashboardUser } from '@/types/dashboard';
 
 interface AuthContextType {
-  Loading: boolean;
+  isLoading: boolean; // Changed from 'Loading' to 'isLoading' for consistency
   user: DashboardUser | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
-  
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +21,7 @@ export const useAuth = () => {
   }
   return context;
 };
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<DashboardUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
           } else {
             setUser({
-              id: session.user.id, // Corrected: Use the ID from the auth session
+              id: session.user.id,
               email: profile.email,
               role: profile.role as 'super_admin' | 'admin' | 'viewer',
               name: profile.name
@@ -54,10 +54,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUser(null);
       }
+      // Ensure isLoading is set to false after handling the session
       setIsLoading(false);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // It's important to handle the loading state here as well for real-time updates
       setIsLoading(true);
       await handleUserSession(session);
     });
@@ -65,6 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initial check on component mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleUserSession(session);
+    }).catch(() => {
+      // Also handle potential errors during session fetching
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -73,7 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setIsLoading(false);
+    // The onAuthStateChange listener will handle setting the user and final loading state
+    if (error) setIsLoading(false);
     return { success: !error, error: error?.message };
   };
 
