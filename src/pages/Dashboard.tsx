@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Edit3, Plus, Save, Eye, Settings } from 'lucide-react';
+import { Trash2, Edit3, Plus, Save, Eye, Settings, BarChart3, PieChart, Table, GanttChartSquare, Database, Shield } from 'lucide-react';
 import { WidgetRenderer } from '@/components/WidgetRenderer';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,12 +19,12 @@ interface DashboardEditorProps {
 }
 
 const AVAILABLE_WIDGETS = [
-  { id: 'MetricCard', name: 'Metric Card', icon: '📊' },
-  { id: 'BugChart', name: 'Bug Chart', icon: '🐞' },
-  { id: 'CustomerSupportTable', name: 'Support Table', icon: '👥' },
-  { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: '🚀' },
-  { id: 'DataManagement', name: 'Data Management', icon: '💾' },
-  { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: '🛡️' },
+  { id: 'MetricCard', name: 'Metric Card', icon: BarChart3 },
+  { id: 'BugChart', name: 'Bug Chart', icon: PieChart },
+  { id: 'CustomerSupportTable', name: 'Support Table', icon: Table },
+  { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: GanttChartSquare },
+  { id: 'DataManagement', name: 'Data Management', icon: Database },
+  { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: Shield },
 ];
 
 export const Dashboard: React.FC<DashboardEditorProps> = ({
@@ -47,7 +47,7 @@ export const Dashboard: React.FC<DashboardEditorProps> = ({
       title: `New ${componentType}`,
       description: 'Widget description',
       props: {},
-      layout: { x: 0, y: 0, w: 2, h: 2 }
+      layout: { x: 0, y: 0, w: 6, h: 4 }
     };
 
     setLayout(prev => ({
@@ -130,7 +130,7 @@ export const Dashboard: React.FC<DashboardEditorProps> = ({
             <Card key={widget.id} className="cursor-pointer hover:bg-accent"
               onClick={() => addWidget(widget.id)}>
               <CardContent className="p-3 flex items-center gap-2">
-                <span className="text-lg">{widget.icon}</span>
+                <widget.icon className="h-4 w-4" />
                 <span className="text-sm font-medium">{widget.name}</span>
                 <Plus className="h-4 w-4 ml-auto" />
               </CardContent>
