@@ -15,6 +15,29 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        // Custom variants for priorities and statuses
+        success:
+          "border-transparent bg-success text-success-foreground hover:bg-success/80",
+        warning:
+          "border-transparent bg-warning text-warning-foreground hover:bg-warning/80",
+        critical:
+            "border-transparent bg-critical text-critical-foreground hover:bg-critical/80",
+        blocker:
+            "border-transparent bg-critical text-critical-foreground hover:bg-critical/80",
+        high:
+            "border-transparent bg-warning text-warning-foreground hover:bg-warning/80",
+        medium:
+            "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        low:
+            "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
+        live:
+            "border-transparent bg-success text-success-foreground hover:bg-success/80",
+        wip:
+            "border-transparent bg-warning text-warning-foreground hover:bg-warning/80",
+        pending:
+            "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
+        closed:
+            "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
       },
     },
     defaultVariants: {
