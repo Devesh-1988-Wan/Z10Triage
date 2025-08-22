@@ -5,6 +5,8 @@ import { CustomerSupportTable } from './CustomerSupportTable';
 import { DevelopmentPipeline } from './DevelopmentPipeline';
 import { DataManagement } from './DataManagement';
 import { SecurityInfrastructureUpdates } from './SecurityInfrastructureUpdates';
+import { HeaderWidget } from './widgets/HeaderWidget';
+import { InfoCardWidget } from './widgets/InfoCardWidget';
 import { WidgetConfig, BugReport, CustomerSupportTicket, DevelopmentTicket, DashboardMetrics } from '@/types/dashboard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,6 +33,8 @@ const widgetRegistry = {
   DevelopmentPipeline,
   DataManagement,
   SecurityInfrastructureUpdates,
+  HeaderWidget,
+  InfoCardWidget,
 };
 
 export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) => {
@@ -54,17 +58,18 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
   const widgetDataProps = dataSource ? { [dataSource]: data[dataSource] } : {};
 
   // For MetricCard, we render it directly as it's already a Card component.
-  if (component === 'MetricCard') {
+  if (component === 'MetricCard' || component === 'HeaderWidget') {
     const metricValue = data.dashboardMetrics ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] : props.value;
     const IconComponent = props.icon ? LucideIcons[props.icon as keyof typeof LucideIcons] : undefined;
     return (
-      <MetricCard
+      <Component
         title={title}
         value={metricValue || 0}
         change={props.change}
         icon={IconComponent}
         description={description}
         priority={props.priority}
+        {...props}
       />
     );
   }
