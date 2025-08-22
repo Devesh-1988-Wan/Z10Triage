@@ -19,15 +19,15 @@ interface DashboardEditorProps {
 }
 
 const AVAILABLE_WIDGETS = [
-  { id: 'MetricCard', name: 'Metric Card', icon: '投' },
-  { id: 'BugChart', name: 'Bug Chart', icon: '菅' },
-  { id: 'CustomerSupportTable', name: 'Support Table', icon: '則' },
-  { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: '噫' },
-  { id: 'DataManagement', name: 'Data Management', icon: '沈' },
-  { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: '柏' },
+  { id: 'MetricCard', name: 'Metric Card', icon: '📊' },
+  { id: 'BugChart', name: 'Bug Chart', icon: '🐞' },
+  { id: 'CustomerSupportTable', name: 'Support Table', icon: '👥' },
+  { id: 'DevelopmentPipeline', name: 'Dev Pipeline', icon: '🚀' },
+  { id: 'DataManagement', name: 'Data Management', icon: '💾' },
+  { id: 'SecurityInfrastructureUpdates', name: 'Security Updates', icon: '🛡️' },
 ];
 
-export const DashboardEditor: React.FC<DashboardEditorProps> = ({
+export const Dashboard: React.FC<DashboardEditorProps> = ({
   initialLayout,
   onSave
 }) => {
