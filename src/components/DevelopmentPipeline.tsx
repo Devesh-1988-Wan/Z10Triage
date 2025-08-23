@@ -83,8 +83,12 @@ interface DevelopmentPipelineProps {
 }
 
 export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ developmentTickets }) => {
-  const tickets = developmentTickets || mockDevelopmentTickets;
+  const tickets = Array.isArray(developmentTickets) && developmentTickets.length > 0 
+    ? developmentTickets 
+    : mockDevelopmentTickets;
+    
   const getProgressPercentage = (actual: number, estimated: number) => {
+    if (!estimated || estimated === 0) return 0;
     return Math.min((actual / estimated) * 100, 100);
   };
 
@@ -92,9 +96,14 @@ export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ develo
     <Card className="shadow-card">
       <CardHeader>
         <CardTitle>Development Pipeline - August Priorities</CardTitle>
-        <CardDescription>38 tickets currently in development pipeline</CardDescription>
+        <CardDescription>{tickets.length} tickets currently in development pipeline</CardDescription>
       </CardHeader>
       <CardContent>
+        {tickets.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No development tickets available</p>
+          </div>
+        ) : (
         <div className="space-y-6">
           {tickets.map((ticket) => (
             <div key={ticket.id} className="border border-border rounded-lg p-4 space-y-3">
@@ -138,6 +147,7 @@ export const DevelopmentPipeline: React.FC<DevelopmentPipelineProps> = ({ develo
             </div>
           ))}
         </div>
+        )}
       </CardContent>
     </Card>
   );

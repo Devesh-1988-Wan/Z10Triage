@@ -73,7 +73,7 @@ export const Dashboard: React.FC<DashboardEditorProps> = ({
     }
   };
 
-  const onLayoutChange = (newLayout) => {
+  const onLayoutChange = (newLayout: any[]) => {
     const updatedWidgets = layout.widgets.map(widget => {
       const layoutItem = newLayout.find(item => item.i === widget.id);
       if (layoutItem) {

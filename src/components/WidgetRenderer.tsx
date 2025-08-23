@@ -1,4 +1,5 @@
 import React from 'react';
+import { ErrorBoundary } from './widgets/ErrorBoundary';
 import { MetricCard } from './MetricCard';
 import { BugChart } from './BugChart';
 import { CustomerSupportTable } from './CustomerSupportTable';
@@ -57,9 +58,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
   // Pass the correct data to the widget based on the dataSource prop
   const widgetDataProps = dataSource ? { [dataSource]: data[dataSource] } : {};
 
+  // Wrap all widgets in error boundary
+  const renderWidget = () => {
   // For MetricCard, we render it directly as it's already a Card component.
-  if (component === 'MetricCard' || component === 'HeaderWidget') {
-    const metricValue = data.dashboardMetrics ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] : props.value;
+  if (component === 'MetricCard') {
+    const metricValue = data.dashboardMetrics && props.valueKey 
+      ? data.dashboardMetrics[props.valueKey as keyof DashboardMetrics] 
+      : props.value || 0;
     const IconComponent = props.icon ? LucideIcons[props.icon as keyof typeof LucideIcons] : undefined;
     return (
       <Component
@@ -69,6 +74,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
         icon={IconComponent}
         description={description}
         priority={props.priority}
+        {...props}
+      />
+    );
+  }
+
+  // Handle HeaderWidget separately since it doesn't need a Card wrapper
+  if (component === 'HeaderWidget') {
+    return (
+      <Component
+        title={title}
         {...props}
       />
     );
@@ -84,5 +99,12 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ config, data }) 
         <Component {...props} {...widgetDataProps} />
       </CardContent>
     </Card>
+  );
+  };
+
+  return (
+    <ErrorBoundary>
+      {renderWidget()}
+    </ErrorBoundary>
   );
 };

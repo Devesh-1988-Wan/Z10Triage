@@ -28,7 +28,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (requiredRole) {
     const roleHierarchy = { 'super_admin': 3, 'admin': 2, 'viewer': 1 };
-    const userLevel = roleHierarchy[user.role];
+    const userLevel = roleHierarchy[user.role] || 0;
     const requiredLevel = roleHierarchy[requiredRole];
     
     if (userLevel < requiredLevel) {
@@ -37,6 +37,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           <div className="text-center">
             <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
             <p className="text-muted-foreground">You don't have permission to access this page.</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Required role: {requiredRole}, Your role: {user.role || 'none'}
+            </p>
           </div>
         </div>
       );

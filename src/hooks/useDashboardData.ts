@@ -179,9 +179,13 @@ export const useDashboardData = () => {
       if (user?.id) {
         const { data: userLayout, error: userLayoutError } = await supabase
           .from('dashboard_layout')
-          .select('id, layout, dashboard_name, dashboard_description') // Fetch all required fields
+          .select('id, layout, dashboard_name, dashboard_description')
           .eq('user_id', user.id)
           .limit(1);
+
+        if (userLayoutError) {
+          console.warn('Error fetching user layout:', userLayoutError);
+        }
 
         if (userLayout && userLayout.length > 0) {
           dbLayoutData = userLayout[0];
@@ -192,9 +196,13 @@ export const useDashboardData = () => {
       if (!userLayoutFound) {
         const { data: defaultLayout, error: defaultLayoutError } = await supabase
           .from('dashboard_layout')
-          .select('id, layout, dashboard_name, dashboard_description') // Fetch all required fields
+          .select('id, layout, dashboard_name, dashboard_description')
           .eq('is_default', true)
           .limit(1);
+
+        if (defaultLayoutError) {
+          console.warn('Error fetching default layout:', defaultLayoutError);
+        }
 
         if (defaultLayout && defaultLayout.length > 0) {
           dbLayoutData = defaultLayout[0];
@@ -290,6 +298,7 @@ export const useDashboardData = () => {
       if (metricsRes.data.length > 0) {
         const metrics = metricsRes.data[0];
         setDashboardMetrics({
+          id: metrics.id,
           totalBugsFixed: metrics.total_bugs_fixed,
           totalTicketsResolved: metrics.total_tickets_resolved,
           blockerBugs: metrics.blocker_bugs,
@@ -297,6 +306,17 @@ export const useDashboardData = () => {
           highPriorityBugs: metrics.high_priority_bugs,
           activeCustomerSupport: metrics.active_customer_support,
           developmentProgress: metrics.development_progress
+        });
+      } else {
+        // Set default metrics if none exist
+        setDashboardMetrics({
+          totalBugsFixed: 0,
+          totalTicketsResolved: 0,
+          blockerBugs: 0,
+          criticalBugs: 0,
+          highPriorityBugs: 0,
+          activeCustomerSupport: 0,
+          developmentProgress: 0
         });
       }
     } catch (err) {

@@ -177,6 +177,12 @@ export const WidgetEditor: React.FC<WidgetEditorProps> = ({ currentLayout, onLay
     setIsDialogOpen(true);
   };
 
+  // Add missing function that was referenced but not defined
+  const openEditDialog = (widget: WidgetConfig) => {
+    setEditingWidget(widget);
+    setIsDialogOpen(true);
+  };
+
   const openAddDialog = () => {
     setEditingWidget(null);
     setNewWidgetForm({

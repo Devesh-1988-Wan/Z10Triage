@@ -36,12 +36,12 @@ const App = () => (
             } />
             <Route path="/dashboard/editor" element={
               <ProtectedRoute requiredRole="admin">
-                <WidgetEditorPage />
+                <DashboardEditor />
               </ProtectedRoute>
             } />
             <Route path="/editor" element={
               <ProtectedRoute>
-                <DashboardEditor />
+                <WidgetEditorPage />
               </ProtectedRoute>
             } />
             <Route path="/public/:shareKey" element={<PublicDashboard />} />

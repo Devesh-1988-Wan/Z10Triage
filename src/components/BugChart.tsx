@@ -46,8 +46,11 @@ interface BugChartProps {
 export const BugChart: React.FC<BugChartProps> = ({ bugReports = [] }) => {
   const data = bugReports.length > 0 ? bugReports : mockBugReports;
   
+  // Ensure data is always an array
+  const safeData = Array.isArray(data) ? data : [];
+  
   const bugPriorityData = Object.entries(
-    data.reduce((acc, report) => {
+    safeData.reduce((acc, report) => {
       acc[report.priority] = (acc[report.priority] || 0) + 1;
       return acc;
     }, {} as Record<BugReport['priority'], number>)

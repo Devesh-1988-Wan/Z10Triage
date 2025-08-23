@@ -28,6 +28,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToReset }) => {
       return;
     }
 
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     const result = await login(email, password);
     if (!result.success) {
       setError(result.error || 'Login failed');

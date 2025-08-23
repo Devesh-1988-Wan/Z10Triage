@@ -37,7 +37,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (error) {
           console.error('Error fetching user profile:', error);
-          setUser(null);
+          // If profile doesn't exist, create one
+          if (error.code === 'PGRST116') {
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.name || 'User',
+                role: 'viewer'
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error('Error creating user profile:', createError);
+              setUser(null);
+            } else if (newProfile) {
+              setUser({
+                id: session.user.id,
+                email: newProfile.email,
+                role: newProfile.role as 'super_admin' | 'admin' | 'viewer',
+                name: newProfile.name,
+              });
+            }
+          } else {
+            setUser(null);
+          }
         } else if (profile) {
           setUser({
             id: session.user.id,

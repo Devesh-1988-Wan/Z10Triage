@@ -49,7 +49,7 @@ const Index = () => {
               variant="outline"
               className="px-8 py-3 text-lg"
             >
-              Try Dashboard Builder
+              Try Dashboard Editor
             </Button>
           )}
         </div>

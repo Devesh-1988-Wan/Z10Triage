@@ -28,6 +28,11 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onBackToLo
       return;
     }
 
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
     const result = await resetPassword(email);
     if (result.success) {
       setIsSubmitted(true);

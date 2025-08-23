@@ -96,12 +96,19 @@ export const DashboardEditor: React.FC<DashboardEditorProps> = ({
 
   const updateWidgetProp = (prop: string, value: any) => {
     if (!editingWidget) return;
-    updateWidget({
-        props: {
-            ...editingWidget.props,
-            [prop]: value
-        }
-    });
+    const updatedWidget = {
+      ...editingWidget,
+      props: {
+        ...editingWidget.props,
+        [prop]: value
+      }
+    };
+    setLayout((prev) => ({
+      widgets: prev.widgets.map((w) =>
+        w.id === updatedWidget.id ? updatedWidget : w
+      ),
+    }));
+    setEditingWidget(updatedWidget);
   };
 
   const deleteWidget = (widgetId: string) => {

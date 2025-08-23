@@ -37,24 +37,29 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   description,
   priority
 }) => {
+  // Ensure value is properly formatted
+  const displayValue = typeof value === 'number' ? value.toLocaleString() : value;
+  
   return (
     <Card className="shadow-card hover:shadow-elegant transition-all duration-300 bg-gradient-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        {Icon && (
-          <Icon className="h-4 w-4 text-primary" />
-        )}
-        {priority && (
-          <Badge className={priorityColors[priority]}>
-            {priority.toUpperCase()}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {Icon && (
+            <Icon className="h-4 w-4 text-primary" />
+          )}
+          {priority && (
+            <Badge className={priorityColors[priority]}>
+              {priority.toUpperCase()}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-foreground mb-1">
-          {value}
+          {displayValue}
         </div>
         {description && (
           <p className="text-xs text-muted-foreground mb-2">

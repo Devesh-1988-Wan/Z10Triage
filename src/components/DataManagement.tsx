@@ -30,9 +30,12 @@ export const DataManagement: React.FC<DataManagementProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground">
+          <div className="text-center py-8">
+            <Shield className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+            <p className="text-muted-foreground">
             Only administrators can access data management forms.
-          </p>
+            </p>
+          </div>
         </CardContent>
       </Card>
     );

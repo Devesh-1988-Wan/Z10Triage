@@ -14,11 +14,22 @@ interface DashboardLayoutProps {
 const roleColors = {
   super_admin: 'bg-critical text-critical-foreground',
   admin: 'bg-warning text-warning-foreground',
-  viewer: 'bg-primary text-primary-foreground'
+  viewer: 'bg-primary text-primary-foreground',
+  // Add fallback for undefined roles
+  undefined: 'bg-muted text-muted-foreground'
 };
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onExportPdf }) => {
   const { user, logout } = useAuth();
+
+  const getUserInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getRoleColor = (role?: string) => {
+    return roleColors[role as keyof typeof roleColors] || roleColors.undefined;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -51,7 +62,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onEx
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                      {user?.name.split(' ').map(n => n[0]).join('')}
+                      {getUserInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -61,7 +72,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onEx
                   <div className="flex flex-col space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium leading-none">{user?.name}</p>
-                      <Badge className={roleColors[user?.role || 'viewer']}>
+                      <Badge className={getRoleColor(user?.role)}>
                         {user?.role?.replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>

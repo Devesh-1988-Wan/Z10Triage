@@ -83,6 +83,15 @@ export const ContentManager: React.FC<ContentManagerProps> = ({ onContentUpdate,
       return;
     }
 
+    if (newContent.widgetType === 'image' && !newContent.imageFile && !newContent.content?.trim()) {
+      toast({
+        title: "Content required",
+        description: "Image widgets require either an image file or text content.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {

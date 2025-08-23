@@ -8,16 +8,36 @@ export const generatePDF = async (elementId: string, filename: string = 'z10-das
       throw new Error('Element not found');
     }
 
+    // Show loading state
+    const loadingToast = document.createElement('div');
+    loadingToast.textContent = 'Generating PDF...';
+    loadingToast.style.cssText = 'position:fixed;top:20px;right:20px;background:#333;color:white;padding:10px;border-radius:5px;z-index:9999';
+    document.body.appendChild(loadingToast);
+
     // Create an off-screen container to render the element for the canvas
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.left = '-9999px';
     tempContainer.style.top = '-9999px';
+    tempContainer.style.width = element.offsetWidth + 'px';
     document.body.appendChild(tempContainer);
     
     // Clone the element and append it to the temporary container
     const clonedElement = element.cloneNode(true) as HTMLElement;
+    // Ensure all styles are copied
+    clonedElement.style.width = element.offsetWidth + 'px';
+    clonedElement.style.height = 'auto';
     tempContainer.appendChild(clonedElement);
+
+    // Wait for any images to load
+    const images = clonedElement.querySelectorAll('img');
+    await Promise.all(Array.from(images).map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    }));
 
     const canvas = await html2canvas(clonedElement, {
       scale: 2,
@@ -25,11 +45,13 @@ export const generatePDF = async (elementId: string, filename: string = 'z10-das
       allowTaint: true,
       backgroundColor: '#ffffff',
       height: clonedElement.scrollHeight,
-      width: clonedElement.scrollWidth
+      width: clonedElement.scrollWidth,
+      logging: false
     });
 
     // Clean up the temporary element
     document.body.removeChild(tempContainer);
+    document.body.removeChild(loadingToast);
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({

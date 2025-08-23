@@ -56,7 +56,8 @@ interface CustomerSupportTableProps {
 }
 
 export const CustomerSupportTable: React.FC<CustomerSupportTableProps> = ({ customerTickets = [] }) => {
-  const tickets = customerTickets.length > 0 ? customerTickets : mockSupportTickets;
+  const tickets = Array.isArray(customerTickets) && customerTickets.length > 0 ? customerTickets : mockSupportTickets;
+  
   return (
     <Card className="shadow-card">
       <CardHeader>
@@ -64,6 +65,11 @@ export const CustomerSupportTable: React.FC<CustomerSupportTableProps> = ({ cust
         <CardDescription>Active customer support tickets and their status</CardDescription>
       </CardHeader>
       <CardContent>
+        {tickets.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No customer support tickets available</p>
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -96,6 +102,7 @@ export const CustomerSupportTable: React.FC<CustomerSupportTableProps> = ({ cust
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   );

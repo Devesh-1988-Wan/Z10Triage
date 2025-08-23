@@ -82,6 +82,15 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
   const handleBugSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!bugForm.title.trim() || !bugForm.description.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and description are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('bug_reports')
@@ -125,6 +134,15 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!supportForm.customerName.trim() || !supportForm.area.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Customer name and support area are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('customer_support_tickets')
@@ -168,6 +186,15 @@ export const AdminForms: React.FC<AdminFormsProps> = ({
   const handleDevSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!devForm.title.trim() || !devForm.ticketId.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and ticket ID are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('development_tickets')
