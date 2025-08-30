@@ -1,73 +1,39 @@
-# Welcome to your Lovable project
+# Z10Triage – Dashboard Builder (Supabase)
 
-## Project info
+A plug‑and‑play, on‑the‑fly dashboard builder you can publish to leadership. Drag, resize, theme, and share. Uses **Supabase** for persistence.
 
-**URL**: https://lovable.dev/projects/4fc9cc26-6828-461b-9b84-315c7a525c2d
+## Features
+- Drag‑and‑drop layout (react‑grid‑layout)
+- Widget library: KPI, Line, Bar, Pie, Table (from Supabase), Markdown, Image, iFrame, Clock
+- Theme: light/dark + primary color picker stored per dashboard
+- Save / Load dashboards (tied to a device id or Supabase auth user)
+- Publish: generate a public, read‑only link `/share/[slug]`
 
-## How can I edit this code?
+## Getting started
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/4fc9cc26-6828-461b-9b84-315c7a525c2d) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. **Clone & install**
+```bash
+pnpm install # or npm i / bun install
 ```
 
-**Edit a file directly in GitHub**
+2. **Configure Supabase**
+Create a project and set env vars:
+```
+cp .env.local.example .env.local
+# Fill NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. **Create tables & RLS** (SQL in `supabase/`)
+Run these SQL files in the Supabase SQL editor:
+- `supabase/schema.sql`
+- `supabase/policies.sql`
 
-**Use GitHub Codespaces**
+4. **Run**
+```bash
+pnpm dev
+```
+Open http://localhost:3000
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4fc9cc26-6828-461b-9b84-315c7a525c2d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Notes
+- For the `Table` widget, ensure the selected table has **RLS** allowing read for `anon` or authenticated users as appropriate.
+- Optional: set `SUPABASE_SERVICE_ROLE_KEY` if you later add server actions needing elevated privileges.
