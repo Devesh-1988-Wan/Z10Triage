@@ -1,66 +1,30 @@
 
-# Z10Triage (Enhanced)
+# Z10 Dashboard (AMLA-themed, widgetized)
 
-A fast, offline‑capable triage board for incidents/defects with keyboard + drag‑and‑drop, IndexedDB persistence, import/export, and PWA support. Designed to deploy on GitHub Pages.
+A fully client-side, editable dashboard that lets you add, configure, drag, and resize widgets. No build tools or servers required. Works offline (PWA) and saves layout in IndexedDB.
 
 ## Features
-- **Columns**: New → In Progress → Blocked → Done
-- **Create/Edit/Delete** items with fields: title, description, priority, severity, assignee, tags, due, status
-- **Drag & drop** between columns + **keyboard shortcuts** (Enter = open, Delete = remove, Ctrl+Arrow = move across columns)
-- **Search & filters** (text, priority, assignee)
-- **Offline‑first** via **IndexedDB** & **Service Worker** (PWA)
-- **Import/Export** JSON
-- **Accessible** landmarks, focus states, ARIA roles, color‑contrast friendly
-- **Theming** (light/dark toggle)
-
-> Service Worker & Manifest follow MDN/web.dev guidance for PWAs; use Lighthouse to verify performance and PWA compliance. 
+- **Widget registry**: KPI, Bar, Pie, Trend, Table, Roadmap
+- **Edit mode**: drag via handle, resize via corner; add/configure/remove widgets
+- **Data binding**: `source + query` path (sample JSON, uploaded JSON, or Supabase adapter stub)
+- **Import/Export** entire layout + data as JSON
+- **PWA** offline and installable
+- **AMLA** theme tokens driven via CSS variables
 
 ## Quick start
 ```bash
-# serve locally (any static server)
-python -m http.server 8080  # or: npx serve .
-# then open http://localhost:8080
+python -m http.server 8080
+# open http://localhost:8080
 ```
 
-## Deploy to GitHub Pages (via Actions)
-This repo includes `.github/workflows/pages.yml`. Push to `main` to publish.
+## Data model
+See `data/sample-data.json`. A widget reads `query` path like `bugs.weeklySummary`.
 
-## Architecture
-- **UI**: `index.html`, `styles.css`
-- **Logic**: `app.js`
-- **Persistence**: `db.js` (IndexedDB object store `items`)
-- **PWA**: `manifest.webmanifest`, `sw.js`
+## Add new widgets
+Create a file in `/widgets/<type>.js` and register: `window.Widgets['type'] = { render(el, cfg, dataset){...} }`.
 
-### Data model (`items`)
-```json
-{
-  "id": "uuid",
-  "title": "string",
-  "description": "string",
-  "priority": "Critical|High|Medium|Low",
-  "severity": "S1|S2|S3|S4",
-  "assignee": "string",
-  "tags": ["string"],
-  "due": "YYYY-MM-DD|null",
-  "status": "new|in_progress|blocked|done"
-}
-```
+## Persisted layout
+Uses IndexedDB `kv['layout']`. Delete via DevTools or `Reset layout` button.
 
-### Import/Export
-- **Export**: Downloads `z10triage-export.json`
-- **Import**: Select a JSON array; missing IDs auto‑generated
-
-### Security
-- **CSP** meta blocks inline scripts & 3rd‑party resources by default; adjust `connect-src` if you add APIs.
-- **No external scripts** or fonts by default.
-
-## Optional: Supabase adapter
-If you want multi‑user sync and auth, add a `remote.js` with Supabase client. Keep CSP `connect-src https://*.supabase.co`.
-
-## Accessibility notes
-- Semantic landmarks (`header`, `main`, `section`)
-- Keyboard shortcuts and focus outlines
-- ARIA roles for lists/listitems
-
-## License
-MIT
+## Security
+CSP blocks third-party resources by default. If using Supabase, endpoints are already allowed in `connect-src`.

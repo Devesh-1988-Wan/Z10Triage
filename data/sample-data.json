@@ -1,0 +1,175 @@
+{
+  "bugs": {
+    "weeklySummary": {
+      "items": [
+        {
+          "label": "Dev Done (last week)",
+          "value": 101,
+          "delta": 5
+        },
+        {
+          "label": "Fixed (last week)",
+          "value": 126,
+          "delta": 7
+        },
+        {
+          "label": "Reported (last week)",
+          "value": 106,
+          "delta": -3
+        },
+        {
+          "label": "Blockers (active)",
+          "value": 26,
+          "delta": 2
+        }
+      ]
+    },
+    "devDoneMix": {
+      "labels": [
+        "Functional",
+        "Admin",
+        "Webstore",
+        "Customer"
+      ],
+      "values": [
+        73,
+        20,
+        8,
+        18
+      ]
+    },
+    "reportedMix": {
+      "labels": [
+        "Functional",
+        "Admin",
+        "Webstore",
+        "Customer"
+      ],
+      "values": [
+        85,
+        22,
+        9,
+        27
+      ]
+    }
+  },
+  "issues": {
+    "monthly": {
+      "labels": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug"
+      ],
+      "values": [
+        32,
+        28,
+        48,
+        36,
+        156,
+        124,
+        107,
+        86
+      ]
+    }
+  },
+  "support": {
+    "inProgress": {
+      "columns": [
+        "Customer",
+        "Priority",
+        "ETA"
+      ],
+      "rows": [
+        [
+          "Etna",
+          "Critical",
+          "Live"
+        ],
+        [
+          "Knox",
+          "Critical",
+          "Live"
+        ],
+        [
+          "KleenRite",
+          "High",
+          "WIP"
+        ],
+        [
+          "Luminos Labs",
+          "High",
+          "WIP"
+        ],
+        [
+          "Apex",
+          "High",
+          "WIP"
+        ],
+        [
+          "Xngage",
+          "High",
+          "WIP"
+        ]
+      ]
+    }
+  },
+  "roadmap": {
+    "august": [
+      {
+        "title": "Returns",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      },
+      {
+        "title": "Refunds (incl. Vouchers)",
+        "status": "Dev In Progress",
+        "priority": "High"
+      },
+      {
+        "title": "Recent Web Purchase",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      },
+      {
+        "title": "Docker Image Optimization",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      },
+      {
+        "title": "Log Optimization",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      },
+      {
+        "title": "Approval Workflow Enhancements",
+        "status": "Dev In Progress",
+        "priority": "High"
+      },
+      {
+        "title": "Admin Audit Logging",
+        "status": "To Do",
+        "priority": "Critical"
+      },
+      {
+        "title": "2FA Authentication",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      },
+      {
+        "title": "Upgrade to Next.js 15",
+        "status": "Dev In Progress",
+        "priority": "Medium"
+      },
+      {
+        "title": "Page Builder Flex Improvements",
+        "status": "Dev In Progress",
+        "priority": "Critical"
+      }
+    ]
+  }
+}

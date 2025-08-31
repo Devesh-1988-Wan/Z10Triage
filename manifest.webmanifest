@@ -1,10 +1,10 @@
 {
-  "name": "Z10Triage",
-  "short_name": "Z10",
+  "name": "Z10 Dashboard",
+  "short_name": "Z10Dash",
   "start_url": ".",
   "display": "standalone",
+  "theme_color": "#0ea5e9",
   "background_color": "#0b0d12",
-  "theme_color": "#0b5fff",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
