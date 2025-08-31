@@ -1,0 +1,137 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Z10Triage</title>
+  <meta name="description" content="Fast, offline-capable triage board for incidents and defects" />
+  <!-- Basic CSP suitable for static hosting (e.g., GitHub Pages). Adjust if you add external origins. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests">
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="assets/icons/favicon-16.png" sizes="16x16" type="image/png" />
+  <meta name="theme-color" content="#0b5fff" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header role="banner" class="app-header">
+    <div class="brand">
+      <img src="assets/icons/logo.svg" alt="Z10Triage logo" class="logo" />
+      <h1>Z10Triage</h1>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Global actions">
+      <button id="btn-new" class="btn primary" aria-haspopup="dialog">New Item</button>
+      <div class="search">
+        <label for="search" class="visually-hidden">Search</label>
+        <input id="search" type="search" placeholder="Search title, tag, assignee…" />
+      </div>
+      <div class="filters">
+        <label for="filter-priority" class="visually-hidden">Priority</label>
+        <select id="filter-priority" aria-label="Filter by priority">
+          <option value="">All priorities</option>
+          <option>Critical</option>
+          <option>High</option>
+          <option>Medium</option>
+          <option>Low</option>
+        </select>
+        <label for="filter-assignee" class="visually-hidden">Assignee</label>
+        <input id="filter-assignee" type="text" placeholder="Assignee" aria-label="Filter by assignee"/>
+        <button id="btn-clear" class="btn">Clear</button>
+      </div>
+      <div class="theme-toggle" role="group" aria-label="Theme">
+        <button id="btn-theme" class="btn" aria-pressed="false" title="Toggle theme">🌓</button>
+      </div>
+      <div class="more" role="group" aria-label="More">
+        <button id="btn-export" class="btn">Export</button>
+        <label for="import-file" class="btn file-label">Import</label>
+        <input id="import-file" type="file" accept="application/json" hidden />
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="board" aria-describedby="board-desc">
+    <p id="board-desc" class="visually-hidden">Drag and drop cards between columns. Use keyboard shortcuts: Enter to open, Delete to remove, Ctrl+Arrow to move across columns.</p>
+    <section class="column" data-status="new" aria-label="New" aria-describedby="new-count">
+      <header><h2>New <span id="new-count" class="count">0</span></h2></header>
+      <div class="dropzone" role="list" aria-labelledby="new-label"></div>
+    </section>
+    <section class="column" data-status="in_progress" aria-label="In Progress" aria-describedby="inprog-count">
+      <header><h2>In Progress <span id="inprog-count" class="count">0</span></h2></header>
+      <div class="dropzone" role="list"></div>
+    </section>
+    <section class="column" data-status="blocked" aria-label="Blocked" aria-describedby="blocked-count">
+      <header><h2>Blocked <span id="blocked-count" class="count">0</span></h2></header>
+      <div class="dropzone" role="list"></div>
+    </section>
+    <section class="column" data-status="done" aria-label="Done" aria-describedby="done-count">
+      <header><h2>Done <span id="done-count" class="count">0</span></h2></header>
+      <div class="dropzone" role="list"></div>
+    </section>
+  </main>
+
+  <dialog id="item-dialog" aria-labelledby="dialog-title">
+    <form method="dialog" id="item-form">
+      <header class="dialog-header">
+        <h2 id="dialog-title">New Triage Item</h2>
+      </header>
+      <div class="grid">
+        <label>Title <input id="title" name="title" required maxlength="120"/></label>
+        <label>Description <textarea id="description" name="description" rows="4"></textarea></label>
+        <label>Priority
+          <select id="priority" name="priority" required>
+            <option>Critical</option>
+            <option selected>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </label>
+        <label>Severity
+          <select id="severity" name="severity" required>
+            <option>S1</option>
+            <option selected>S2</option>
+            <option>S3</option>
+            <option>S4</option>
+          </select>
+        </label>
+        <label>Assignee <input id="assignee" name="assignee" /></label>
+        <label>Tags <input id="tags" name="tags" placeholder="comma,separated" /></label>
+        <label>Due <input id="due" name="due" type="date" /></label>
+        <label>Status
+          <select id="status" name="status">
+            <option value="new" selected>New</option>
+            <option value="in_progress">In Progress</option>
+            <option value="blocked">Blocked</option>
+            <option value="done">Done</option>
+          </select>
+        </label>
+      </div>
+      <menu class="dialog-actions">
+        <button value="cancel" class="btn">Cancel</button>
+        <button id="btn-delete" class="btn danger" value="delete" hidden>Delete</button>
+        <button id="btn-save" class="btn primary" value="default">Save</button>
+      </menu>
+      <input type="hidden" id="item-id" name="id" />
+    </form>
+  </dialog>
+
+  <template id="card-template">
+    <article class="card" draggable="true" role="listitem" tabindex="0" aria-roledescription="Triage card">
+      <header class="card-h">
+        <span class="pill priority"></span>
+        <h3 class="title"></h3>
+      </header>
+      <p class="desc"></p>
+      <footer class="card-f">
+        <span class="assignee"></span>
+        <span class="tags"></span>
+        <time class="due" datetime=""></time>
+      </footer>
+    </article>
+  </template>
+
+  <script src="db.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
